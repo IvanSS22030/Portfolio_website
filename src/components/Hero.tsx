@@ -31,8 +31,28 @@ const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [typingDone, setTypingDone] = useState(false);
+  const [isTypingActive, setIsTypingActive] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Reset animation state on component mount/remount
+  useEffect(() => {
+    setVisibleLines(0);
+    setTypedText('');
+    setTypingDone(false);
+    setIsTypingActive(false);
+    
+    // Make sure audio is loaded and ready
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+    
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Show hacker lines one by one
   useEffect(() => {
@@ -44,14 +64,24 @@ const HackerIntro: React.FC = () => {
 
   // Start typing the final line after all hacker lines are shown
   useEffect(() => {
-    if (visibleLines === hackerLines.length && !typingDone) {
+    if (visibleLines === hackerLines.length && !typingDone && !isTypingActive) {
+      // Set typing as active to prevent duplicate intervals
+      setIsTypingActive(true);
+      
+      // Ensure audio is loaded and ready before typing starts
+      if (audioRef.current) {
+        audioRef.current.load();
+      }
+      
       let currentIndex = 0;
       
-      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
       
-      typingIntervalRef.current = setInterval(() => {
+      const typeNextChar = () => {
         if (currentIndex < finalLine.length) {
-          // Play typewriter sound for each character
+          // Play sound first, then add the character - ensures tight audio sync
           if (audioRef.current) {
             audioRef.current.currentTime = 0;
             audioRef.current.play().catch(() => {});
@@ -61,17 +91,33 @@ const HackerIntro: React.FC = () => {
           setTypedText(finalLine.substring(0, currentIndex + 1));
           currentIndex++;
         } else {
-          // Typing is complete
+          // Typing is complete - stop audio and clear interval
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          
           clearInterval(typingIntervalRef.current!);
           setTypingDone(true);
+          setIsTypingActive(false);
         }
-      }, 80);
+      };
+      
+      typingIntervalRef.current = setInterval(typeNextChar, 80);
       
       return () => {
-        if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+        }
+        
+        // Stop any playing audio if component unmounts mid-typing
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
       };
     }
-  }, [visibleLines, typingDone]);
+  }, [visibleLines, typingDone, isTypingActive]);
 
   const showCursor = !typingDone && visibleLines === hackerLines.length;
   const displayName = typedText.replace('user_decrypted: ', '');
@@ -104,11 +150,15 @@ const HackerIntro: React.FC = () => {
 const Hero: React.FC = () => {
   const { theme } = useTheme();
   const [showTyping, setShowTyping] = useState(false);
+  const [key, setKey] = useState(0); // Key to force HackerIntro remount on theme switch
 
   useEffect(() => {
     if (theme === 'professional') {
       setShowTyping(false);
       setTimeout(() => setShowTyping(true), 100);
+    } else {
+      // Force HackerIntro to remount when switching to personal theme
+      setKey(prev => prev + 1);
     }
   }, [theme]);
 
@@ -172,7 +222,7 @@ const Hero: React.FC = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90"></div>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
-        <HackerIntro />
+        <HackerIntro key={key} />
         <p className="text-xl md:text-2xl text-amber-300 mb-8 max-w-2xl font-serif">
           Slayer of Code & Creatures of the Night
         </p>
