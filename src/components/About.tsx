@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import backgroundVideo from '../assets/videos/Castlevania_Media.mp4';
 
@@ -6,46 +6,96 @@ const About: React.FC = () => {
   const { theme } = useTheme();
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-
+  const animationRef = useRef<number | null>(null);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
+  
+  // Smooth audio fade function
+  const fadeAudio = (video: HTMLVideoElement, targetVolume: number, duration: number = 1000) => {
+    // Cancel any ongoing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    const startVolume = video.volume;
+    const startTime = performance.now();
+    
+    // Animation function
+    const animate = (currentTime: number) => {
+      // Calculate elapsed time and progress percentage
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Calculate current volume using smooth easing
+      const newVolume = startVolume + (targetVolume - startVolume) * progress;
+      video.volume = Math.max(0, Math.min(1, newVolume)); // Clamp between 0 and 1
+      
+      // Continue animation if not complete
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Animation complete
+        if (targetVolume === 0 && !isVideoVisible) {
+          // If faded out completely and video is not visible, pause it
+          video.pause();
+        }
+      }
+    };
+    
+    // Start animation
+    animationRef.current = requestAnimationFrame(animate);
+  };
+  
   useEffect(() => {
     const video = videoRef.current;
     const container = videoContainerRef.current;
     if (!video || !container) return;
-
+    
+    // Set initial state
+    video.volume = 0;
+    
+    // Create intersection observer
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && theme === 'personal') {
-            // Video is visible and we're in personal theme
-            video.muted = false;
-            video.volume = 1;
-            video.play().catch(error => {
-              console.log("Video play failed:", error);
-            });
-          } else {
-            // Video is not visible or we're in professional theme
-            video.muted = true;
-          }
-        });
+        const entry = entries[0];
+        
+        // Store visibility state
+        setIsVideoVisible(entry.isIntersecting);
+        
+        if (entry.isIntersecting && theme === 'personal') {
+          // Video is visible in personal theme
+          video.play().catch(error => {
+            console.log("Video play failed:", error);
+          });
+          
+          // Fade in audio
+          fadeAudio(video, 1, 1500);
+        } else {
+          // Video is not visible or not in personal theme
+          fadeAudio(video, 0, 1000);
+        }
       },
       {
-        threshold: 0.7, // Video must be 70% visible
-        rootMargin: '0px' // No margins for more precise detection
+        threshold: 0.5, // Trigger when 50% visible
+        rootMargin: '-10% 0px' // Adjust this to fine-tune when fading starts
       }
     );
-
+    
+    // Start observing
     observer.observe(container);
-
-    // Initial setup
+    
+    // Always make sure video is playing in personal theme
     if (theme === 'personal') {
-      video.muted = true; // Start muted
       video.play().catch(error => {
-        console.log("Initial video play failed:", error);
+        console.log("Initial play failed:", error);
       });
     }
-
+    
+    // Cleanup function
     return () => {
       observer.disconnect();
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, [theme]);
 
@@ -100,6 +150,7 @@ const About: React.FC = () => {
           autoPlay
           loop
           playsInline
+          muted={theme !== 'personal'} // Only unmuted in personal theme
           className="absolute min-w-full min-h-full object-cover"
         >
           <source src={backgroundVideo} type="video/mp4" />
