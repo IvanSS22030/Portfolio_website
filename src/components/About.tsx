@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import backgroundVideo from '../assets/videos/Castlevania_Media.mp4';
 import professionalImage from '../assets/images/profile pictures/professional site image.jpg';
+import personalImage from '../assets/images/profile pictures/Personal site picture.jpg';
 
 // Add these CSS keyframes at the top of your component
 const typingAnimation = `
@@ -271,7 +272,7 @@ const About: React.FC = () => {
           <div className="md:w-1/2">
             <div className="aspect-square bg-amber-900 rounded-lg overflow-hidden border border-amber-800 shadow-xl">
               <img 
-                src="https://images.pexels.com/photos/3771807/pexels-photo-3771807.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                src={personalImage} 
                 alt="Ivan Joel Sanchez Santana" 
                 className="w-full h-full object-cover opacity-80 mix-blend-overlay"
               />
