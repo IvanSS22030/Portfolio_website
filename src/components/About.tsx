@@ -1,8 +1,53 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import backgroundVideo from '../assets/videos/Castlevania_Media.mp4';
 
 const About: React.FC = () => {
   const { theme } = useTheme();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const container = videoContainerRef.current;
+    if (!video || !container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && theme === 'personal') {
+            // Video is visible and we're in personal theme
+            video.muted = false;
+            video.volume = 1;
+            video.play().catch(error => {
+              console.log("Video play failed:", error);
+            });
+          } else {
+            // Video is not visible or we're in professional theme
+            video.muted = true;
+          }
+        });
+      },
+      {
+        threshold: 0.7, // Video must be 70% visible
+        rootMargin: '0px' // No margins for more precise detection
+      }
+    );
+
+    observer.observe(container);
+
+    // Initial setup
+    if (theme === 'personal') {
+      video.muted = true; // Start muted
+      video.play().catch(error => {
+        console.log("Initial video play failed:", error);
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [theme]);
 
   const professionalAbout = (
     <section id="about" className="py-20 bg-white">
@@ -47,8 +92,24 @@ const About: React.FC = () => {
   );
 
   const personalAbout = (
-    <section id="about" className="py-20 bg-black bg-opacity-90 text-amber-200">
-      <div className="container mx-auto px-4">
+    <section id="about" className="py-20 relative overflow-hidden">
+      {/* Video Background */}
+      <div ref={videoContainerRef} className="absolute inset-0 w-full h-full z-0">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          playsInline
+          className="absolute min-w-full min-h-full object-cover"
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
+        {/* Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+      </div>
+
+      {/* Content */}
+      <div className="container mx-auto px-4 relative z-10">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-amber-500 mb-12 font-serif">The Chronicle of Ivan</h2>
         <div className="flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2">
