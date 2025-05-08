@@ -31,34 +31,53 @@ const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [typingDone, setTypingDone] = useState(false);
+  const [isAudioReady, setIsAudioReady] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset everything on mount and when the key changes
   useEffect(() => {
     console.log('[HackerIntro] Component did mount/remount (key changed).');
     setVisibleLines(0);
     setTypedText('');
     setTypingDone(false);
+    setIsAudioReady(false);
 
-    if (audioRef.current) {
-      console.log('[HackerIntro] Initializing audio element: loading.');
-      audioRef.current.load(); // Load audio, browser will decide if it can preload
+    const audioElement = audioRef.current;
+    
+    // Define handlers here so they are in scope for both add and remove
+    const handleCanPlayThrough = () => {
+      console.log('[HackerIntro] Audio event: canplaythrough - Audio is ready to play.');
+      setIsAudioReady(true);
+    };
+    const handleError = (e: Event) => {
+      console.error('[HackerIntro] Audio event: error', e);
+      setIsAudioReady(false);
+    };
+
+    if (audioElement) {
+      console.log('[HackerIntro] Initializing audio element: setting up event listeners and loading.');
+      audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
+      audioElement.addEventListener('error', handleError);
+      audioElement.load();
     } else {
       console.log('[HackerIntro] audioRef.current is null on mount.');
     }
     
     return () => {
-      console.log('[HackerIntro] Component will unmount. Cleaning up timers and audio.');
+      console.log('[HackerIntro] Component will unmount. Cleaning up timers, audio, and event listeners.');
       if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
       if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+      
+      // Only try to remove listeners and pause if audioElement was available
+      if (audioElement) {
+        audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
+        audioElement.removeEventListener('error', handleError);
+        audioElement.pause();
+        audioElement.currentTime = 0;
       }
     };
-  }, []); // Empty dependency array: runs on mount and unmount
+  }, []);
 
   // Show hacker lines one by one
   useEffect(() => {
@@ -85,39 +104,35 @@ const HackerIntro: React.FC = () => {
       return;
     }
 
-    console.log('[HackerIntro] startNameTyping called. Ensuring audio is loaded.');
-    audioRef.current.load(); 
-    
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
     }
-    
+
     let currentIndex = 0;
-    console.log('[HackerIntro] Starting typing interval for finalLine.');
+
+    // Set initial volume
+    if (audioRef.current) {
+      audioRef.current.volume = 0.2; // Lower volume for better experience
+    }
 
     typingIntervalRef.current = setInterval(() => {
       if (currentIndex < finalLine.length) {
         setTypedText(finalLine.substring(0, currentIndex + 1));
         
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          const playPromise = audioRef.current.play();
+        if (audioRef.current && isAudioReady) {
+          // Clone and play the audio for each character
+          const audioClone = audioRef.current.cloneNode() as HTMLAudioElement;
+          audioClone.volume = 0.2; // Set volume for the clone
+          const playPromise = audioClone.play();
+          
           if (playPromise !== undefined) {
             playPromise.catch(error => {
-              console.warn(`[HackerIntro] Sound play failed for char '${finalLine[currentIndex]}' (Error: ${error.name} - ${error.message}). This is often due to browser autoplay policies requiring user interaction first.`);
+              console.warn(`[HackerIntro] Sound play failed: ${error.message}`);
             });
           }
-        } else {
-           console.log('[HackerIntro] audioRef is null inside interval, cannot play sound.');
         }
         currentIndex++;
       } else {
-        console.log('[HackerIntro] Typing complete for finalLine.');
-        if (audioRef.current) {
-          console.log('[HackerIntro] Pausing audio after typing completion.');
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
         if (typingIntervalRef.current) {
           clearInterval(typingIntervalRef.current);
         }
