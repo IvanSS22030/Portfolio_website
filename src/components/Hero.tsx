@@ -31,25 +31,23 @@ const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [typingDone, setTypingDone] = useState(false);
-  const [isTypingActive, setIsTypingActive] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset animation state on component mount/remount
+  // Reset everything on mount
   useEffect(() => {
     setVisibleLines(0);
     setTypedText('');
     setTypingDone(false);
-    setIsTypingActive(false);
     
-    // Make sure audio is loaded and ready
-    if (audioRef.current) {
-      audioRef.current.load();
-    }
-    
+    // Clean up all timers on unmount
     return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
+      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+      if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       }
     };
   }, []);
@@ -57,67 +55,82 @@ const HackerIntro: React.FC = () => {
   // Show hacker lines one by one
   useEffect(() => {
     if (visibleLines < hackerLines.length) {
-      const timeout = setTimeout(() => setVisibleLines(v => v + 1), 1100);
+      const timeout = setTimeout(() => {
+        setVisibleLines(v => v + 1);
+      }, 1100);
+      
       return () => clearTimeout(timeout);
-    }
-  }, [visibleLines]);
-
-  // Start typing the final line after all hacker lines are shown
-  useEffect(() => {
-    if (visibleLines === hackerLines.length && !typingDone && !isTypingActive) {
-      // Set typing as active to prevent duplicate intervals
-      setIsTypingActive(true);
-      
-      // Ensure audio is loaded and ready before typing starts
-      if (audioRef.current) {
-        audioRef.current.load();
-      }
-      
-      let currentIndex = 0;
-      
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
-      
-      const typeNextChar = () => {
-        if (currentIndex < finalLine.length) {
-          // Play sound first, then add the character - ensures tight audio sync
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-          }
-          
-          // Add the next character from the finalLine
-          setTypedText(finalLine.substring(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          // Typing is complete - stop audio and clear interval
-          if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-          }
-          
-          clearInterval(typingIntervalRef.current!);
-          setTypingDone(true);
-          setIsTypingActive(false);
-        }
-      };
-      
-      typingIntervalRef.current = setInterval(typeNextChar, 80);
+    } else if (visibleLines === hackerLines.length && !typingDone && typedText.length === 0) {
+      // When all lines are visible and we haven't started typing yet, begin the name typing
+      // Small delay to ensure the last hacker line is visible before starting to type
+      startTypingTimeoutRef.current = setTimeout(() => {
+        startNameTyping();
+      }, 500);
       
       return () => {
-        if (typingIntervalRef.current) {
-          clearInterval(typingIntervalRef.current);
+        if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
+      };
+    }
+  }, [visibleLines, typingDone, typedText.length]);
+
+  // Function to start the name typing animation
+  const startNameTyping = () => {
+    // First ensure audio is ready
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+    
+    // Clear any existing interval
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+    }
+    
+    let currentIndex = 0;
+    
+    // Start typing each character with interval
+    typingIntervalRef.current = setInterval(() => {
+      if (currentIndex < finalLine.length) {
+        // Play sound first for tight sync
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          const playPromise = audioRef.current.play();
+          if (playPromise) {
+            playPromise.catch(() => {
+              // Handle auto-play restrictions silently
+            });
+          }
         }
         
-        // Stop any playing audio if component unmounts mid-typing
+        // Update the text
+        setTypedText(finalLine.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        // Typing complete
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         }
-      };
+        
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+        }
+        
+        setTypingDone(true);
+      }
+    }, 80);
+  };
+
+  // Stop and clean up when typing is done
+  useEffect(() => {
+    if (typingDone && typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     }
-  }, [visibleLines, typingDone, isTypingActive]);
+  }, [typingDone]);
 
   const showCursor = !typingDone && visibleLines === hackerLines.length;
   const displayName = typedText.replace('user_decrypted: ', '');
