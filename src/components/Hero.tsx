@@ -109,10 +109,11 @@ const HackerIntro: React.FC = () => {
     }
 
     let currentIndex = 0;
+    let audioElements: HTMLAudioElement[] = []; // Track all audio elements
 
     // Set initial volume
     if (audioRef.current) {
-      audioRef.current.volume = 0.2; // Lower volume for better experience
+      audioRef.current.volume = 0.2;
     }
 
     typingIntervalRef.current = setInterval(() => {
@@ -120,15 +121,25 @@ const HackerIntro: React.FC = () => {
         setTypedText(finalLine.substring(0, currentIndex + 1));
         
         if (audioRef.current && isAudioReady) {
-          // Clone and play the audio for each character
           const audioClone = audioRef.current.cloneNode() as HTMLAudioElement;
-          audioClone.volume = 0.2; // Set volume for the clone
-          const playPromise = audioClone.play();
+          audioClone.volume = 0.2;
+          audioElements.push(audioClone); // Add to tracking array
           
+          const playPromise = audioClone.play();
           if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.warn(`[HackerIntro] Sound play failed: ${error.message}`);
-            });
+            playPromise
+              .then(() => {
+                // Remove audio element after it finishes playing
+                audioClone.addEventListener('ended', () => {
+                  const index = audioElements.indexOf(audioClone);
+                  if (index > -1) {
+                    audioElements.splice(index, 1);
+                  }
+                });
+              })
+              .catch(error => {
+                console.warn(`[HackerIntro] Sound play failed: ${error.message}`);
+              });
           }
         }
         currentIndex++;
@@ -136,14 +147,29 @@ const HackerIntro: React.FC = () => {
         if (typingIntervalRef.current) {
           clearInterval(typingIntervalRef.current);
         }
+        // Stop and cleanup all remaining audio elements
+        audioElements.forEach(audio => {
+          audio.pause();
+          audio.remove();
+        });
+        audioElements = [];
         setTypingDone(true);
       }
     }, 80);
+
+    // Cleanup function to stop all audio when component unmounts or theme changes
+    return () => {
+      audioElements.forEach(audio => {
+        audio.pause();
+        audio.remove();
+      });
+      audioElements = [];
+    };
   };
 
   useEffect(() => {
     if (typingDone) {
-      console.log('[HackerIntro] typingDone is true. Ensuring interval is cleared and audio is stopped.');
+      console.log('[HackerIntro] typingDone is true. Ensuring all audio is stopped.');
       if (typingIntervalRef.current) {
         clearInterval(typingIntervalRef.current);
       }
@@ -151,6 +177,14 @@ const HackerIntro: React.FC = () => {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+      // Also stop any cloned audio elements that might still be playing
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (audio !== audioRef.current) {
+          audio.pause();
+          audio.remove();
+        }
+      });
     }
   }, [typingDone]);
 
