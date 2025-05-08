@@ -35,19 +35,35 @@ const HackerIntro: React.FC = () => {
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset everything on mount
+  // Reset everything on mount and when the key changes
   useEffect(() => {
+    console.log('[HackerIntro] Component did mount/remount (key changed).');
     setVisibleLines(0);
     setTypedText('');
     setTypingDone(false);
 
-    // Ensure audio is loaded when component mounts and key changes
     if (audioRef.current) {
-      audioRef.current.load(); // Load audio when the component is ready or remounted
+      console.log('[HackerIntro] Initializing audio element.');
+      audioRef.current.load(); // Load audio
+      // Attempt to prime the audio by playing and immediately pausing.
+      // This might help with autoplay restrictions on some browsers.
+      console.log('[HackerIntro] Attempting to prime audio...');
+      const primePromise = audioRef.current.play();
+      if (primePromise !== undefined) {
+        primePromise.then(() => {
+          console.log('[HackerIntro] Audio primed successfully, pausing immediately.');
+          audioRef.current?.pause();
+          if (audioRef.current) audioRef.current.currentTime = 0;
+        }).catch(error => {
+          console.warn('[HackerIntro] Audio priming failed (this is often due to autoplay policies):', error);
+        });
+      }
+    } else {
+      console.log('[HackerIntro] audioRef.current is null on mount.');
     }
     
-    // Clean up all timers on unmount
     return () => {
+      console.log('[HackerIntro] Component will unmount. Cleaning up timers and audio.');
       if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
       if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
       if (audioRef.current) {
@@ -55,61 +71,66 @@ const HackerIntro: React.FC = () => {
         audioRef.current.currentTime = 0;
       }
     };
-  }, []); // Empty dependency array ensures this runs on mount and unmount
+  }, []); // Empty dependency array: runs on mount and unmount
 
   // Show hacker lines one by one
   useEffect(() => {
     if (visibleLines < hackerLines.length) {
       const timeout = setTimeout(() => {
         setVisibleLines(v => v + 1);
-      }, 1100); // Standard delay for hacker lines
-      
+      }, 1100);
       return () => clearTimeout(timeout);
     } else if (visibleLines === hackerLines.length && !typingDone && typedText.length === 0) {
-      // When all lines are visible and we haven't started typing the name yet
+      console.log('[HackerIntro] All hacker lines shown. Scheduling name typing.');
       startTypingTimeoutRef.current = setTimeout(() => {
+        console.log('[HackerIntro] Starting name typing animation.');
         startNameTyping();
-      }, 500); // Short delay before name typing starts
-      
+      }, 500);
       return () => {
         if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
       };
     }
   }, [visibleLines, typingDone, typedText.length]);
 
-  // Function to start the name typing animation
   const startNameTyping = () => {
-    if (audioRef.current) {
-      audioRef.current.load(); // Explicitly load audio before starting to type
+    if (!audioRef.current) {
+      console.error('[HackerIntro] Cannot start typing: audioRef is null.');
+      return;
     }
+
+    console.log('[HackerIntro] startNameTyping called. Loading audio again just in case.');
+    audioRef.current.load(); // Ensure it's loaded
     
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
     }
     
     let currentIndex = 0;
-    
+    console.log('[HackerIntro] Starting typing interval for finalLine.');
+
     typingIntervalRef.current = setInterval(() => {
       if (currentIndex < finalLine.length) {
-        // Set the text first
         setTypedText(finalLine.substring(0, currentIndex + 1));
         
-        // Then attempt to play the sound
         if (audioRef.current) {
-          audioRef.current.currentTime = 0; // Reset audio to start for each char
+          // Log audio state before attempting to play
+          // console.log(`[HackerIntro] Audio state before play: paused=${audioRef.current.paused}, muted=${audioRef.current.muted}, volume=${audioRef.current.volume}, readyState=${audioRef.current.readyState}`);
+          audioRef.current.currentTime = 0;
           const playPromise = audioRef.current.play();
+          // console.log('[HackerIntro] Attempting to play sound for character:', finalLine[currentIndex]);
           if (playPromise !== undefined) {
             playPromise.catch(error => {
-              // Autoplay was prevented.
-              // We can log this or handle it silently.
-              // console.warn("Audio play prevented:", error);
+              // console.warn(`[HackerIntro] Sound play failed for char ${finalLine[currentIndex]}:`, error);
             });
           }
+        } else {
+          // console.log('[HackerIntro] audioRef is null inside interval, cannot play sound.');
         }
         currentIndex++;
       } else {
-        // Typing complete
+        console.log('[HackerIntro] Typing complete for finalLine.');
         if (audioRef.current) {
+          console.log('[HackerIntro] Pausing audio after typing completion.');
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         }
@@ -118,12 +139,12 @@ const HackerIntro: React.FC = () => {
         }
         setTypingDone(true);
       }
-    }, 80); // Typing speed
+    }, 80);
   };
 
-  // Stop and clean up when typing is done (redundancy for safety)
   useEffect(() => {
     if (typingDone) {
+      console.log('[HackerIntro] typingDone is true. Ensuring interval is cleared and audio is stopped.');
       if (typingIntervalRef.current) {
         clearInterval(typingIntervalRef.current);
       }
