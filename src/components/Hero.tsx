@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { ChevronDown } from 'lucide-react';
 import typewriterSound from '../assets/Sounds/typewriter.wav';
+import typingSound from '../assets/Sounds/typewriter-typing.mp3';
 
 // Typing animation keyframes
 const typingAnimation = `
@@ -37,44 +38,33 @@ const HackerIntro: React.FC = () => {
   const startTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    console.log('[HackerIntro] Component did mount/remount (key changed).');
-    setVisibleLines(0);
-    setTypedText('');
-    setTypingDone(false);
-    setIsAudioReady(false);
-
-    const audioElement = audioRef.current;
+    const audioElement = new Audio(typewriterSound);
+    audioElement.volume = 0.2;
+    audioRef.current = audioElement;
     
-    // Define handlers here so they are in scope for both add and remove
+    // Define handlers
     const handleCanPlayThrough = () => {
-      console.log('[HackerIntro] Audio event: canplaythrough - Audio is ready to play.');
+      console.log('[HackerIntro] Audio ready to play');
       setIsAudioReady(true);
     };
+    
     const handleError = (e: Event) => {
-      console.error('[HackerIntro] Audio event: error', e);
+      console.error('[HackerIntro] Audio error:', e);
       setIsAudioReady(false);
     };
 
-    if (audioElement) {
-      console.log('[HackerIntro] Initializing audio element: setting up event listeners and loading.');
-      audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
-      audioElement.addEventListener('error', handleError);
-      audioElement.load();
-    } else {
-      console.log('[HackerIntro] audioRef.current is null on mount.');
-    }
+    audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
+    audioElement.addEventListener('error', handleError);
+    
+    // Preload the audio
+    audioElement.load();
     
     return () => {
-      console.log('[HackerIntro] Component will unmount. Cleaning up timers, audio, and event listeners.');
-      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-      if (startTypingTimeoutRef.current) clearTimeout(startTypingTimeoutRef.current);
-      
-      // Only try to remove listeners and pause if audioElement was available
-      if (audioElement) {
-        audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
-        audioElement.removeEventListener('error', handleError);
-        audioElement.pause();
-        audioElement.currentTime = 0;
+      audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
+      audioElement.removeEventListener('error', handleError);
+      audioElement.pause();
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
       }
     };
   }, []);
@@ -99,8 +89,8 @@ const HackerIntro: React.FC = () => {
   }, [visibleLines, typingDone, typedText.length]);
 
   const startNameTyping = () => {
-    if (!audioRef.current) {
-      console.error('[HackerIntro] Cannot start typing: audioRef is null.');
+    if (!audioRef.current || !isAudioReady) {
+      console.warn('[HackerIntro] Audio not ready');
       return;
     }
 
@@ -109,12 +99,7 @@ const HackerIntro: React.FC = () => {
     }
 
     let currentIndex = 0;
-    let audioElements: HTMLAudioElement[] = []; // Track all audio elements
-
-    // Set initial volume
-    if (audioRef.current) {
-      audioRef.current.volume = 0.2;
-    }
+    let activeAudioElements: HTMLAudioElement[] = [];
 
     typingIntervalRef.current = setInterval(() => {
       if (currentIndex < finalLine.length) {
@@ -123,48 +108,40 @@ const HackerIntro: React.FC = () => {
         if (audioRef.current && isAudioReady) {
           const audioClone = audioRef.current.cloneNode() as HTMLAudioElement;
           audioClone.volume = 0.2;
-          audioElements.push(audioClone); // Add to tracking array
+          activeAudioElements.push(audioClone);
           
           const playPromise = audioClone.play();
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
-                // Remove audio element after it finishes playing
                 audioClone.addEventListener('ended', () => {
-                  const index = audioElements.indexOf(audioClone);
+                  const index = activeAudioElements.indexOf(audioClone);
                   if (index > -1) {
-                    audioElements.splice(index, 1);
+                    activeAudioElements.splice(index, 1);
+                    audioClone.remove();
                   }
                 });
               })
               .catch(error => {
-                console.warn(`[HackerIntro] Sound play failed: ${error.message}`);
+                console.warn(`[HackerIntro] Sound play failed:`, error);
               });
           }
         }
         currentIndex++;
       } else {
-        if (typingIntervalRef.current) {
-          clearInterval(typingIntervalRef.current);
-        }
-        // Stop and cleanup all remaining audio elements
-        audioElements.forEach(audio => {
+        // Stop all active audio elements
+        activeAudioElements.forEach(audio => {
           audio.pause();
           audio.remove();
         });
-        audioElements = [];
+        activeAudioElements = [];
+        
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+        }
         setTypingDone(true);
       }
     }, 80);
-
-    // Cleanup function to stop all audio when component unmounts or theme changes
-    return () => {
-      audioElements.forEach(audio => {
-        audio.pause();
-        audio.remove();
-      });
-      audioElements = [];
-    };
   };
 
   useEffect(() => {
@@ -219,17 +196,168 @@ const HackerIntro: React.FC = () => {
 const Hero: React.FC = () => {
   const { theme } = useTheme();
   const [showTyping, setShowTyping] = useState(false);
-  const [key, setKey] = useState(0); // Key to force HackerIntro remount on theme switch
+  const [key, setKey] = useState(0);
+  const typingSoundRef = useRef<HTMLAudioElement | null>(null);
+  const typingIntervalRef = useRef<number | null>(null);
+  const animationEndTimeoutRef = useRef<number | null>(null);
 
+  useEffect(() => {
+    // Initialize audio element
+    const audio = new Audio();
+    audio.src = typingSound;
+    audio.volume = 0.2;
+    typingSoundRef.current = audio;
+
+    // Cleanup
+    return () => {
+      if (typingSoundRef.current) {
+        typingSoundRef.current.pause();
+        typingSoundRef.current.currentTime = 0;
+      }
+      if (typingIntervalRef.current) {
+        window.clearInterval(typingIntervalRef.current);
+      }
+      if (animationEndTimeoutRef.current) {
+        window.clearTimeout(animationEndTimeoutRef.current);
+      }
+    };
+  }, []); // Run once on mount
+
+  // Function to handle typing sound
+  const playTypingSound = () => {
+    if (typingSoundRef.current) {
+      typingSoundRef.current.currentTime = 0;
+      typingSoundRef.current.play().catch(error => {
+        console.warn('Audio playback failed:', error);
+      });
+    }
+  };
+
+  // Function to stop typing sound
+  const stopTypingSound = () => {
+    if (typingIntervalRef.current) {
+      window.clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    if (typingSoundRef.current) {
+      typingSoundRef.current.pause();
+      typingSoundRef.current.currentTime = 0;
+    }
+  };
+
+  // Handle theme changes
   useEffect(() => {
     if (theme === 'professional') {
       setShowTyping(false);
-      setTimeout(() => setShowTyping(true), 100);
+      // Start typing immediately
+      setTimeout(() => {
+        setShowTyping(true);
+      }, 100);
     } else {
-      // Force HackerIntro to remount when switching to personal theme
       setKey(prev => prev + 1);
+      stopTypingSound();
     }
+
+    // Cleanup on theme change
+    return () => {
+      stopTypingSound();
+      if (animationEndTimeoutRef.current) {
+        window.clearTimeout(animationEndTimeoutRef.current);
+      }
+    };
   }, [theme]);
+
+  const handleAnimationStart = () => {
+    if (theme === 'professional') {
+      // Create audio context and gain node
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const gainNode = audioContext.createGain();
+      gainNode.connect(audioContext.destination);
+      gainNode.gain.value = 0.2;
+
+      // Create and set up audio element with the correct audio file
+      const audio = new Audio(typingSound); // Using typewriter-typing.mp3
+      audio.volume = 0.2;
+      
+      let activeAudioElements: HTMLAudioElement[] = [];
+      let isTypingDone = false;
+      
+      const stopAllAudio = () => {
+        isTypingDone = true;
+        // Stop all active audio elements immediately
+        activeAudioElements.forEach(audioElement => {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+          audioElement.remove();
+        });
+        activeAudioElements = [];
+
+        if (typingIntervalRef.current) {
+          window.clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        }
+
+        audioContext.close().catch(console.error);
+      };
+
+      const playTypewriterSound = () => {
+        if (isTypingDone) return;
+
+        const audioClone = audio.cloneNode() as HTMLAudioElement;
+        audioClone.volume = 0.2;
+        activeAudioElements.push(audioClone);
+        
+        const playPromise = audioClone.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              audioClone.addEventListener('ended', () => {
+                if (isTypingDone || !activeAudioElements.includes(audioClone)) return;
+                const index = activeAudioElements.indexOf(audioClone);
+                if (index > -1) {
+                  activeAudioElements.splice(index, 1);
+                  audioClone.remove();
+                }
+              });
+            })
+            .catch(error => {
+              console.warn('Audio playback failed:', error);
+              const index = activeAudioElements.indexOf(audioClone);
+              if (index > -1) {
+                activeAudioElements.splice(index, 1);
+                audioClone.remove();
+              }
+            });
+        }
+      };
+
+      // Start playing sounds just before the animation starts
+      setTimeout(() => {
+        if (!isTypingDone) {
+          playTypewriterSound();
+          typingIntervalRef.current = window.setInterval(() => {
+            if (!isTypingDone) {
+              playTypewriterSound();
+            }
+          }, 100);
+        }
+      }, 1400);
+
+      // Calculate animation duration including delay
+      const animationDuration = 3500; // 3.5s typing animation
+      const totalDuration = animationDuration + 1500; // Include initial delay
+
+      // Stop all audio exactly when animation ends
+      animationEndTimeoutRef.current = window.setTimeout(() => {
+        stopAllAudio();
+      }, totalDuration);
+
+      // Cleanup function
+      return () => {
+        stopAllAudio();
+      };
+    }
+  };
 
   const professionalHero = (
     <section 
@@ -245,9 +373,11 @@ const Hero: React.FC = () => {
               style={{
                 width: '0%',
                 animation: 'typing 3.5s steps(28, end) forwards, blink 0.7s step-end infinite',
-                animationDelay: '0.2s,3.5s',
+                animationDelay: '1.5s,5s', // Delay typing by 1.5s to match audio
                 animationFillMode: 'forwards',
+                animationDuration: '3.5s',
               }}
+              onAnimationStart={handleAnimationStart}
             >
               Ivan Joel Sanchez Santana
             </span>
