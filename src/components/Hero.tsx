@@ -43,21 +43,8 @@ const HackerIntro: React.FC = () => {
     setTypingDone(false);
 
     if (audioRef.current) {
-      console.log('[HackerIntro] Initializing audio element.');
-      audioRef.current.load(); // Load audio
-      // Attempt to prime the audio by playing and immediately pausing.
-      // This might help with autoplay restrictions on some browsers.
-      console.log('[HackerIntro] Attempting to prime audio...');
-      const primePromise = audioRef.current.play();
-      if (primePromise !== undefined) {
-        primePromise.then(() => {
-          console.log('[HackerIntro] Audio primed successfully, pausing immediately.');
-          audioRef.current?.pause();
-          if (audioRef.current) audioRef.current.currentTime = 0;
-        }).catch(error => {
-          console.warn('[HackerIntro] Audio priming failed (this is often due to autoplay policies):', error);
-        });
-      }
+      console.log('[HackerIntro] Initializing audio element: loading.');
+      audioRef.current.load(); // Load audio, browser will decide if it can preload
     } else {
       console.log('[HackerIntro] audioRef.current is null on mount.');
     }
@@ -98,8 +85,8 @@ const HackerIntro: React.FC = () => {
       return;
     }
 
-    console.log('[HackerIntro] startNameTyping called. Loading audio again just in case.');
-    audioRef.current.load(); // Ensure it's loaded
+    console.log('[HackerIntro] startNameTyping called. Ensuring audio is loaded.');
+    audioRef.current.load(); 
     
     if (typingIntervalRef.current) {
       clearInterval(typingIntervalRef.current);
@@ -113,18 +100,15 @@ const HackerIntro: React.FC = () => {
         setTypedText(finalLine.substring(0, currentIndex + 1));
         
         if (audioRef.current) {
-          // Log audio state before attempting to play
-          // console.log(`[HackerIntro] Audio state before play: paused=${audioRef.current.paused}, muted=${audioRef.current.muted}, volume=${audioRef.current.volume}, readyState=${audioRef.current.readyState}`);
           audioRef.current.currentTime = 0;
           const playPromise = audioRef.current.play();
-          // console.log('[HackerIntro] Attempting to play sound for character:', finalLine[currentIndex]);
           if (playPromise !== undefined) {
             playPromise.catch(error => {
-              // console.warn(`[HackerIntro] Sound play failed for char ${finalLine[currentIndex]}:`, error);
+              console.warn(`[HackerIntro] Sound play failed for char '${finalLine[currentIndex]}' (Error: ${error.name} - ${error.message}). This is often due to browser autoplay policies requiring user interaction first.`);
             });
           }
         } else {
-          // console.log('[HackerIntro] audioRef is null inside interval, cannot play sound.');
+           console.log('[HackerIntro] audioRef is null inside interval, cannot play sound.');
         }
         currentIndex++;
       } else {
