@@ -1,0 +1,141 @@
+# Git Information for MyWebPortfolio Project
+
+## Project Git Structure
+- Main branch: main
+- Working directory: /project
+
+## Common Git Operations
+
+### 1. Checking Status
+To check the current state of your working directory:
+```
+git status
+```
+
+### 2. Making Changes
+When modifying files, especially in these key directories:
+- src/components/: UI components
+- src/assets/: Static assets (images, sounds, videos)
+- src/context/: React context providers
+- src/data/: Data files
+- src/types/: TypeScript type definitions
+
+### 3. Staging Changes
+For individual files:
+```
+git add src/components/ComponentName.tsx
+```
+
+For all changes:
+```
+git add .
+```
+
+### 4. Committing Changes
+Use semantic commit messages following this format:
+```
+git commit -m "<type>: <description>"
+```
+
+Types:
+- feat: New features
+- fix: Bug fixes
+- style: Style/UI changes
+- refactor: Code restructuring
+- docs: Documentation
+- test: Test-related changes
+- chore: Maintenance tasks
+
+Examples:
+- feat: Add new hero section animation
+- fix: Resolve audio playback issues
+- style: Update theme colors
+- refactor: Improve component organization
+
+### 5. Important Files to Track
+Critical files that should always be reviewed before committing:
+- src/components/*.tsx: React components
+- src/context/ThemeContext.tsx: Theme management
+- package.json: Dependencies
+- vite.config.ts: Build configuration
+- tailwind.config.js: Styling configuration
+
+### 6. Files to Ignore
+These are already in .gitignore:
+- node_modules/
+- dist/
+- build/
+- .env files
+- .DS_Store
+- *.log files
+
+### 7. Best Practices
+1. Always pull before starting new work:
+   ```
+   git pull origin main
+   ```
+
+2. Create meaningful commit messages that explain WHY not just WHAT
+
+3. Review changes before committing:
+   ```
+   git diff
+   ```
+
+4. Keep commits focused and atomic:
+   - One feature/fix per commit
+   - Related changes should be grouped
+   - Unrelated changes should be separate commits
+
+5. Regular commits:
+   - Commit often
+   - Push regularly to avoid large conflicts
+
+### 8. TypeScript/React Specific
+- Run type checks before committing:
+  ```
+  npm run build
+  ```
+- Ensure no ESLint errors:
+  ```
+  npm run lint
+  ```
+
+### 9. Common Issues and Solutions
+1. Line ending issues (CRLF/LF):
+   ```
+   git config --global core.autocrlf true  # On Windows
+   ```
+
+2. Large file handling:
+   - Keep video/audio assets optimized
+   - Consider using Git LFS for large media files
+
+3. Merge conflicts:
+   - Resolve conflicts in the following order:
+     1. package.json
+     2. configuration files
+     3. source code
+     4. styles
+     5. assets
+
+### 10. Project-Specific Notes
+- The project uses a dual-theme system (professional/personal)
+- Audio assets are in src/assets/Sounds/
+- Images are in src/assets/images/
+- Components follow a specific naming convention
+- TypeScript strict mode is enabled
+
+### 11. Deployment Considerations
+- Build the project before deployment:
+  ```
+  npm run build
+  ```
+- Verify all assets are properly referenced
+- Check bundle size and performance
+
+### 12. Git Hooks (if implemented)
+- pre-commit: Runs type checking and linting
+- pre-push: Runs tests and build
+
+For any questions or issues, refer to the project documentation or contact the maintainers.
