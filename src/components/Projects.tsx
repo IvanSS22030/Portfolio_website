@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { projects } from '../data/projects';
+import ImageCarousel from './ImageCarousel';
 
 const Projects: React.FC = () => {
   const { theme } = useTheme();
@@ -12,12 +13,23 @@ const Projects: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project) => (
             <div key={project.id} className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-2">
-              <div className="h-48 overflow-hidden">
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                  {project.images ? (
+                    <ImageCarousel images={project.images} className="h-full w-full" />
+                  ) : project.image ? (
+                    <img 
+                      src={project.image} 
+                      alt={project.title} 
+                      className="max-h-full max-w-full object-contain p-2"
+                      style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-gray-500">No image available</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">{project.title}</h3>
@@ -56,13 +68,24 @@ const Projects: React.FC = () => {
               key={project.id} 
               className="bg-gray-900 rounded-lg overflow-hidden border border-amber-900 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-amber-900/20 hover:shadow-xl"
             >
-              <div className="h-48 overflow-hidden relative">
-                <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-full object-cover transform transition-transform duration-500 hover:scale-110"
-                />
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                  <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
+                  {project.images ? (
+                    <ImageCarousel images={project.images} className="h-full w-full" />
+                  ) : project.image ? (
+                    <img 
+                      src={project.image} 
+                      alt={project.title} 
+                      className="max-h-full max-w-full object-contain p-2 transform transition-transform duration-500 hover:scale-105 z-0"
+                      style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center relative z-20">
+                      <span className="text-amber-200">No image available</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-amber-400 mb-2 font-serif">{project.title}</h3>

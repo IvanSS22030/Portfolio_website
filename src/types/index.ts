@@ -19,7 +19,8 @@ export interface ProjectItem {
   readonly title: string;
   readonly description: string;
   readonly technologies: readonly string[];
-  readonly image: string;
+  readonly image?: string; // Make this optional since we have images array
+  readonly images?: string[]; // For projects with multiple images
   readonly link: string;
 }
 
