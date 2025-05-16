@@ -33,10 +33,13 @@ export interface WorkExperience {
 }
 
 // Skill-related types
+export type SkillCategory = 'professional' | 'personal';
+
 export interface Skill {
   readonly id: number;
   readonly name: string;
   readonly level: number;
+  readonly category: SkillCategory;
 }
 
 // Navigation constants
