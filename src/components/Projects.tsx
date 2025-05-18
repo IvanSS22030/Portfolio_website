@@ -14,25 +14,20 @@ const Projects: React.FC = () => {
           {projects.map((project) => (
             <div 
               key={project.id} 
-              className="bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-blue-100"
+              className="group bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-blue-100"
             >
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 overflow-hidden">
                   {project.images ? (
-                    <ImageCarousel 
-                      images={project.images} 
-                      className="h-full w-full" 
-                      overlayColor="white"
-                      overlayOpacity={0.1}
-                      hoverOverlayOpacity={0}
-                    />
+                    <ImageCarousel images={project.images} className="h-full w-full" />
                   ) : project.image ? (
-                    <img 
-                      src={project.image} 
-                      alt={project.title} 
-                      className="max-h-full max-w-full object-contain p-2 transform transition-transform duration-500 hover:scale-105"
-                      style={{ maxWidth: '100%', maxHeight: '100%' }}
-                    />
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={project.image} 
+                        alt={project.title} 
+                        className="h-full w-full object-contain p-2 transform transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-gray-500">No image available</span>
@@ -77,25 +72,21 @@ const Projects: React.FC = () => {
           {projects.map((project) => (
             <div 
               key={project.id} 
-              className="bg-gray-900 rounded-lg overflow-hidden border border-amber-900 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-amber-900/20 hover:shadow-xl"
+              className="group bg-gray-900 rounded-lg overflow-hidden border border-amber-900 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-amber-900/30 hover:shadow-xl"
             >
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 overflow-hidden">
+                  <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
                   {project.images ? (
-                    <ImageCarousel 
-                      images={project.images} 
-                      className="h-full w-full" 
-                      overlayColor="black"
-                      overlayOpacity={0.6}
-                      hoverOverlayOpacity={0.2}
-                    />
+                    <ImageCarousel images={project.images} className="h-full w-full" />
                   ) : project.image ? (
-                    <img 
-                      src={project.image} 
-                      alt={project.title} 
-                      className="max-h-full max-w-full object-contain p-2 transform transition-transform duration-500 hover:scale-105 z-0"
-                      style={{ maxWidth: '100%', maxHeight: '100%' }}
-                    />
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={project.image} 
+                        alt={project.title} 
+                        className="h-full w-full object-contain p-2 transform transition-transform duration-500 group-hover:scale-110 z-0"
+                      />
+                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center relative z-20">
                       <span className="text-amber-200">No image available</span>
@@ -104,13 +95,15 @@ const Projects: React.FC = () => {
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-amber-400 mb-2 font-serif">{project.title}</h3>
+                <h3 className="text-xl font-semibold text-amber-400 mb-2 font-serif group-hover:text-amber-300 transition-colors duration-300">
+                  {project.title}
+                </h3>
                 <p className="text-amber-200 mb-4">{project.description}</p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {project.technologies.map((tech, index) => (
                     <span 
                       key={index} 
-                      className="px-3 py-1 bg-amber-900 text-amber-200 text-xs rounded-full border border-amber-800"
+                      className="px-3 py-1 bg-amber-900 text-amber-200 text-xs rounded-full border border-amber-800 transition-all duration-300 hover:bg-amber-800 hover:border-amber-700"
                     >
                       {tech}
                     </span>
@@ -118,7 +111,7 @@ const Projects: React.FC = () => {
                 </div>
                 <a 
                   href={project.link} 
-                  className="inline-block px-4 py-2 bg-amber-800 text-amber-100 rounded border border-amber-700 hover:bg-amber-900 transition-colors duration-300 font-serif"
+                  className="inline-block px-4 py-2 bg-amber-800 text-amber-100 rounded border border-amber-700 hover:bg-amber-900 hover:border-amber-600 transition-all duration-300 hover:shadow-md hover:shadow-amber-900/30 font-serif"
                 >
                   Examine Artifact
                 </a>

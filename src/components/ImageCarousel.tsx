@@ -28,8 +28,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     return () => clearTimeout(timer);
   }, [currentImageIndex, isHovered, images.length]);
 
-  if (images.length === 0) return null;
-
   // Calculate the aspect ratio of the first image to maintain consistency
   const [containerStyle, setContainerStyle] = useState<React.CSSProperties>({
     paddingBottom: '56.25%', // 16:9 aspect ratio as default
@@ -97,19 +95,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
               }}
             />
           ))}
-          {images.length > 1 && (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-1">
-              {images.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`h-1 w-4 rounded-full transition-all duration-300 ${
-                    idx === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-1">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1 w-4 rounded-full transition-all duration-300 ${
+                  idx === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
