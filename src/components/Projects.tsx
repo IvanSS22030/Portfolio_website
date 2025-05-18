@@ -76,9 +76,14 @@ const Projects: React.FC = () => {
             >
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 overflow-hidden">
-                  <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
                   {project.images ? (
-                    <ImageCarousel images={project.images} className="h-full w-full" />
+                    <ImageCarousel 
+                      images={project.images} 
+                      className="h-full w-full"
+                      overlayColor="black"
+                      overlayOpacity={0.4}
+                      hoverOverlayOpacity={0.2}
+                    />
                   ) : project.image ? (
                     <div className="absolute inset-0 flex items-center justify-center overflow-hidden transition-transform duration-400">
                       <img 
