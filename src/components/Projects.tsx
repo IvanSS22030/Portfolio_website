@@ -21,11 +21,11 @@ const Projects: React.FC = () => {
                   {project.images ? (
                     <ImageCarousel images={project.images} className="h-full w-full" />
                   ) : project.image ? (
-                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden transition-transform duration-400">
                       <img 
                         src={project.image} 
                         alt={project.title} 
-                        className="h-full w-full object-contain p-2 transform transition-transform duration-500 group-hover:scale-105"
+                        className="h-full w-full object-contain p-2 transform transition-transform duration-400 ease-out hover:scale-105"
                       />
                     </div>
                   ) : (
@@ -80,11 +80,11 @@ const Projects: React.FC = () => {
                   {project.images ? (
                     <ImageCarousel images={project.images} className="h-full w-full" />
                   ) : project.image ? (
-                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden transition-transform duration-400">
                       <img 
                         src={project.image} 
                         alt={project.title} 
-                        className="h-full w-full object-contain p-2 transform transition-transform duration-500 group-hover:scale-110 z-0"
+                        className="h-full w-full object-contain p-2 transform transition-transform duration-400 ease-out hover:scale-105 z-0"
                       />
                     </div>
                   ) : (
