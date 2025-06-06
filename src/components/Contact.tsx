@@ -29,7 +29,7 @@ const Contact: React.FC = () => {
                 <Mail className="w-5 h-5 text-blue-600 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-gray-800">Email</h4>
-                  <p className="text-gray-600">contact@ivanjoel.com</p>
+                  <p className="text-gray-600">ivanj_ss@hotmail.com</p>
                 </div>
               </div>
               
@@ -37,7 +37,7 @@ const Contact: React.FC = () => {
                 <MapPin className="w-5 h-5 text-blue-600 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-gray-800">Location</h4>
-                  <p className="text-gray-600">New York, NY, USA</p>
+                  <p className="text-gray-600">Santo Domingo, Dominican Republic</p>
                 </div>
               </div>
             </div>
@@ -112,7 +112,7 @@ const Contact: React.FC = () => {
                 <Mail className="w-5 h-5 text-amber-500 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-amber-400 font-serif">Spectral Mail</h4>
-                  <p className="text-amber-200">contact@ivanjoel.com</p>
+                  <p className="text-amber-200">ivanj_ss@hotmail.com</p>
                 </div>
               </div>
               
@@ -120,7 +120,7 @@ const Contact: React.FC = () => {
                 <MapPin className="w-5 h-5 text-amber-500 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-amber-400 font-serif">Mortal Dwelling</h4>
-                  <p className="text-amber-200">New York, NY, USA</p>
+                  <p className="text-amber-200">Santo Domingo, Dominican Republic</p>
                 </div>
               </div>
             </div>

@@ -193,6 +193,39 @@ const HackerIntro: React.FC = () => {
   );
 };
 
+// Mouse Follow Bubble Component
+const MouseFollowBubble: React.FC = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    function handleMove(e: PointerEvent) {
+      setPosition({ x: e.clientX, y: e.clientY });
+    }
+    
+    window.addEventListener('pointermove', handleMove);
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+    };
+  }, []);
+
+  return (
+    <div
+      className="fixed pointer-events-none"
+      style={{
+        width: '500px',
+        height: '500px',
+        background: 'radial-gradient(circle, rgba(255, 193, 7, 0.8) 0%, rgba(255, 193, 7, 0.5) 30%, rgba(255, 193, 7, 0.2) 60%, transparent 100%)',
+        borderRadius: '50%',
+        transform: `translate(${position.x - 250}px, ${position.y - 250}px)`,
+        transition: 'transform 0.15s ease-out',
+        zIndex: 1,
+        top: 0,
+        left: 0,
+      }}
+    />
+  );
+};
+
 const Hero: React.FC = () => {
   const { theme } = useTheme();
   const [showTyping, setShowTyping] = useState(false);
@@ -362,10 +395,11 @@ const Hero: React.FC = () => {
   const professionalHero = (
     <section 
       id="home" 
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden"
     >
+      <MouseFollowBubble />
       <style>{typingAnimation}</style>
-      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
+      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
           {showTyping ? (
             <span
@@ -407,9 +441,9 @@ const Hero: React.FC = () => {
             <ChevronDown className="h-8 w-8 text-gray-600" />
           </a>
         </div>
-      </div>
-    </section>
-  );
+              </div>
+      </section>
+    );
 
   const personalHero = (
     <section 
