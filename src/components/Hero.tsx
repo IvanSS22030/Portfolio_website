@@ -196,10 +196,33 @@ const HackerIntro: React.FC = () => {
 // Mouse Follow Bubble Component
 const MouseFollowBubble: React.FC = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isInHero, setIsInHero] = useState(true);
+  const heroRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    heroRef.current = document.getElementById('home');
+  }, []);
 
   useEffect(() => {
     function handleMove(e: PointerEvent) {
-      setPosition({ x: e.clientX, y: e.clientY });
+      if (!heroRef.current) return;
+
+      const heroRect = heroRef.current.getBoundingClientRect();
+      const isMouseInHero = (
+        e.clientX >= heroRect.left &&
+        e.clientX <= heroRect.right &&
+        e.clientY >= heroRect.top &&
+        e.clientY <= heroRect.bottom
+      );
+
+      setIsInHero(isMouseInHero);
+
+      if (isMouseInHero) {
+        // Calculate position relative to the hero section
+        const relativeX = e.clientX - heroRect.left;
+        const relativeY = e.clientY - heroRect.top;
+        setPosition({ x: relativeX, y: relativeY });
+      }
     }
     
     window.addEventListener('pointermove', handleMove);
@@ -210,17 +233,61 @@ const MouseFollowBubble: React.FC = () => {
 
   return (
     <div
-      className="fixed pointer-events-none"
+      className="absolute pointer-events-none"
       style={{
-        width: '500px',
-        height: '500px',
-        background: 'radial-gradient(circle, rgba(255, 193, 7, 0.8) 0%, rgba(255, 193, 7, 0.5) 30%, rgba(255, 193, 7, 0.2) 60%, transparent 100%)',
+        width: '600px',
+        height: '600px',
+        background: 'radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0.7) 20%, rgba(255, 215, 0, 0.5) 40%, rgba(255, 215, 0, 0.3) 60%, rgba(255, 215, 0, 0.1) 80%, transparent 100%)',
         borderRadius: '50%',
-        transform: `translate(${position.x - 250}px, ${position.y - 250}px)`,
-        transition: 'transform 0.15s ease-out',
+        transform: `translate(${position.x - 300}px, ${position.y - 300}px)`,
+        transition: 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         zIndex: 1,
-        top: 0,
-        left: 0,
+        filter: 'blur(1px)',
+        opacity: isInHero ? 0.8 : 0,
+        visibility: isInHero ? 'visible' : 'hidden',
+      }}
+    />
+  );
+};
+
+// Professional Hero Custom Cursor Component
+const ProfessionalCursor: React.FC = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    function handleMove(e: PointerEvent) {
+      setPosition({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+    }
+
+    function handleLeave() {
+      setIsVisible(false);
+    }
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerleave', handleLeave);
+    
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerleave', handleLeave);
+    };
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{
+        width: '20px',
+        height: '20px',
+        background: 'radial-gradient(circle, #FFD700 0%, rgba(255, 215, 0, 0.8) 60%, transparent 100%)',
+        borderRadius: '50%',
+        transform: `translate(${position.x - 10}px, ${position.y - 10}px)`,
+        transition: 'transform 0.1s ease-out',
+        filter: 'blur(0.5px)',
+        mixBlendMode: 'difference',
       }}
     />
   );
@@ -395,9 +462,10 @@ const Hero: React.FC = () => {
   const professionalHero = (
     <section 
       id="home" 
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none"
     >
       <MouseFollowBubble />
+      <ProfessionalCursor />
       <style>{typingAnimation}</style>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
@@ -441,9 +509,9 @@ const Hero: React.FC = () => {
             <ChevronDown className="h-8 w-8 text-gray-600" />
           </a>
         </div>
-              </div>
-      </section>
-    );
+      </div>
+    </section>
+  );
 
   const personalHero = (
     <section 
