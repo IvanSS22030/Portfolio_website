@@ -370,6 +370,21 @@ const Hero: React.FC = () => {
     };
   }, [theme]);
 
+  useEffect(() => {
+    if (theme === 'professional') {
+      document.body.classList.add('cursor-none-active');
+      document.body.classList.remove('cursor-normal');
+    } else {
+      document.body.classList.add('cursor-normal');
+      document.body.classList.remove('cursor-none-active');
+    }
+
+    // Cleanup function to remove classes on component unmount
+    return () => {
+      document.body.classList.remove('cursor-none-active', 'cursor-normal');
+    };
+  }, [theme]);
+
   const handleAnimationStart = () => {
     if (theme === 'professional') {
       // Create audio context and gain node

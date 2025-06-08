@@ -10,13 +10,13 @@ const GooeyCursor = () => {
   const [bubbleSpring, bubbleApi] = useSpring(() => ({
     x: -200, // Start off-screen
     y: -200,
-    config: { mass: 2, tension: 170, friction: 26 },
+    config: { mass: 4, tension: 80, friction: 50 },
   }));
 
   const [trailSpring, trailApi] = useSpring(() => ({
     x: -200,
     y: -200,
-    config: { mass: 1, tension: 200, friction: 30 },
+    config: { mass: 3, tension: 100, friction: 45 },
   }));
 
   useEffect(() => {
