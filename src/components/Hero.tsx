@@ -3,6 +3,9 @@ import { useTheme } from '../context/ThemeContext';
 import { ChevronDown } from 'lucide-react';
 import typewriterSound from '../assets/Sounds/typewriter.wav';
 import typingSound from '../assets/Sounds/typewriter-typing.mp3';
+// import { Professional, Personal } from '../utils/Icons';
+// import AnimatedCursor from 'react-animated-cursor';
+import GooeyCursor from './GooeyCursor';
 
 // Typing animation keyframes
 const typingAnimation = `
@@ -464,8 +467,7 @@ const Hero: React.FC = () => {
       id="home" 
       className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none"
     >
-      <MouseFollowBubble />
-      <ProfessionalCursor />
+      <GooeyCursor />
       <style>{typingAnimation}</style>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
