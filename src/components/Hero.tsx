@@ -238,15 +238,15 @@ const MouseFollowBubble: React.FC = () => {
     <div
       className="absolute pointer-events-none"
       style={{
-        width: '600px',
-        height: '600px',
-        background: 'radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0.7) 20%, rgba(255, 215, 0, 0.5) 40%, rgba(255, 215, 0, 0.3) 60%, rgba(255, 215, 0, 0.1) 80%, transparent 100%)',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.1) 40%, rgba(255, 215, 0, 0.05) 70%, transparent 100%)',
         borderRadius: '50%',
-        transform: `translate(${position.x - 300}px, ${position.y - 300}px)`,
+        transform: `translate(${position.x - 200}px, ${position.y - 200}px)`,
         transition: 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         zIndex: 1,
-        filter: 'blur(1px)',
-        opacity: isInHero ? 0.8 : 0,
+        filter: 'blur(8px)',
+        opacity: isInHero ? 1 : 0,
         visibility: isInHero ? 'visible' : 'hidden',
       }}
     />
@@ -283,14 +283,14 @@ const ProfessionalCursor: React.FC = () => {
     <div
       className="fixed pointer-events-none z-50"
       style={{
-        width: '20px',
-        height: '20px',
-        background: 'radial-gradient(circle, #FFD700 0%, rgba(255, 215, 0, 0.8) 60%, transparent 100%)',
+        width: '25px',
+        height: '25px',
+        background: 'radial-gradient(circle, rgba(255, 215, 0, 1) 0%, rgba(255, 215, 0, 0.8) 40%, rgba(255, 215, 0, 0.4) 70%, transparent 100%)',
         borderRadius: '50%',
-        transform: `translate(${position.x - 10}px, ${position.y - 10}px)`,
-        transition: 'transform 0.1s ease-out',
-        filter: 'blur(0.5px)',
-        mixBlendMode: 'difference',
+        transform: `translate(${position.x - 12.5}px, ${position.y - 12.5}px)`,
+        transition: 'transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        filter: 'blur(0.8px)',
+        boxShadow: '0 0 5px rgba(255, 215, 0, 0.3)',
       }}
     />
   );
