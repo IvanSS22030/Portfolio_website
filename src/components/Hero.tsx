@@ -465,7 +465,7 @@ const Hero: React.FC = () => {
   const professionalHero = (
     <section 
       id="home" 
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none-active"
     >
       <GooeyCursor />
       <style>{typingAnimation}</style>
@@ -518,7 +518,7 @@ const Hero: React.FC = () => {
   const personalHero = (
     <section 
       id="home" 
-      className="min-h-screen flex items-center justify-center bg-cover bg-center pt-16 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center bg-cover bg-center pt-16 relative overflow-hidden cursor-normal"
       style={{ 
         backgroundImage: `url('https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')` 
       }}

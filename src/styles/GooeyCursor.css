@@ -1,6 +1,35 @@
-/* Hide default cursor in the hero section */
-#home {
-  cursor: none;
+/* Hide default cursor only when GooeyCursor is active (professional theme) */
+.cursor-none-active {
+  cursor: none !important;
+}
+
+.cursor-none-active * {
+  cursor: none !important;
+}
+
+/* Normal cursor for personal theme */
+.cursor-normal {
+  cursor: auto !important;
+}
+
+.cursor-normal * {
+  cursor: auto !important;
+}
+
+/* Interactive elements should have appropriate cursors in personal theme */
+.cursor-normal a,
+.cursor-normal button,
+.cursor-normal [role="button"],
+.cursor-normal input[type="submit"],
+.cursor-normal input[type="button"] {
+  cursor: pointer !important;
+}
+
+.cursor-normal input[type="text"],
+.cursor-normal input[type="email"],
+.cursor-normal input[type="password"],
+.cursor-normal textarea {
+  cursor: text !important;
 }
 
 /* 
