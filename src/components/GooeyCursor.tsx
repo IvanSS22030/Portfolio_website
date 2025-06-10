@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import '../styles/GooeyCursor.css'
 
 const GooeyCursor: React.FC = () => {
@@ -10,8 +10,23 @@ const GooeyCursor: React.FC = () => {
   const b1Ref = useRef<HTMLDivElement>(null)
   const b2Ref = useRef<HTMLDivElement>(null)
   const b3Ref = useRef<HTMLDivElement>(null)
+  
+  // State to track if we're in the hero section
+  const [isInHeroSection, setIsInHeroSection] = useState(true)
 
   useEffect(() => {
+    // Scroll detection to control gooey bubbles
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const windowHeight = window.innerHeight
+      
+      // Consider hero section as roughly the first viewport height
+      // Adjust this threshold based on your actual hero section height
+      const heroSectionHeight = windowHeight * 0.8 // 80% of viewport height
+      
+      setIsInHeroSection(scrollY < heroSectionHeight)
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e
 
@@ -21,61 +36,64 @@ const GooeyCursor: React.FC = () => {
         cursorLineBoxRef.current.style.top = `${y}px`
       }
 
-      // Position red dot at mouse position (immediate follow)
+      // Position red dot at mouse position (immediate follow) - ALWAYS ACTIVE
       if (redDotRef.current) {
         redDotRef.current.style.left = `${x}px`
         redDotRef.current.style.top = `${y}px`
       }
 
-      // Position red circle at mouse position (slight lag)
+      // Position red circle at mouse position (slight lag) - ALWAYS ACTIVE
       if (redCircleRef.current) {
         redCircleRef.current.style.left = `${x}px`
         redCircleRef.current.style.top = `${y}px`
       }
 
-      // Animate gooey bubbles with different lag and physics
-      if (b1Ref.current) {
-        // Fastest bubble - direct follow
-        b1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
-      }
+      // Animate gooey bubbles with different lag and physics - ONLY IN HERO SECTION
+      if (isInHeroSection) {
+        if (b1Ref.current) {
+          // Fastest bubble - direct follow
+          b1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+        }
 
-      if (b2Ref.current) {
-        // Medium lag bubble
-        const currentTransform = b2Ref.current.style.transform
-        const currentX = currentTransform.includes('translate3d') 
-          ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-          : 0
-        const currentY = currentTransform.includes('translate3d')
-          ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-          : 0
-        
-        const deltaX = (x - currentX) * 0.08
-        const deltaY = (y - currentY) * 0.08
-        
-        const newX = currentX + deltaX
-        const newY = currentY + deltaY
-        
-        b2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-      }
+        if (b2Ref.current) {
+          // Medium lag bubble
+          const currentTransform = b2Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d') 
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : 0
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : 0
+          
+          const deltaX = (x - currentX) * 0.08
+          const deltaY = (y - currentY) * 0.08
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          b2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+        }
 
-      if (b3Ref.current) {
-        // Slowest lag bubble
-        const currentTransform = b3Ref.current.style.transform
-        const currentX = currentTransform.includes('translate3d')
-          ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-          : 0
-        const currentY = currentTransform.includes('translate3d')
-          ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-          : 0
-        
-        const deltaX = (x - currentX) * 0.04
-        const deltaY = (y - currentY) * 0.04
-        
-        const newX = currentX + deltaX
-        const newY = currentY + deltaY
-        
-        b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+        if (b3Ref.current) {
+          // Slowest lag bubble
+          const currentTransform = b3Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : 0
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : 0
+          
+          const deltaX = (x - currentX) * 0.04
+          const deltaY = (y - currentY) * 0.04
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+        }
       }
+      // When not in hero section, bubbles don't move (they stay "stuck" in their last position)
     }
 
     const handleMouseDown = () => {
@@ -105,15 +123,20 @@ const GooeyCursor: React.FC = () => {
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('scroll', handleScroll)
     document.body.style.cursor = 'none'
+
+    // Initialize scroll position check
+    handleScroll()
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mousedown', handleMouseDown)
       document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('scroll', handleScroll)
       document.body.style.cursor = 'auto'
     }
-  }, [])
+  }, []) // Removed isInHeroSection dependency to fix red cursor disappearing
 
   return (
     <>

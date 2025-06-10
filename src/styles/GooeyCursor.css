@@ -13,7 +13,7 @@
 /* Cursor Lines */
 .mk-cursor-line-box {
   position: fixed;
-  z-index: 10001;
+  z-index: 10003; /* Highest for precision lines */
   pointer-events: none;
   width: 100%;
   height: 100%;
@@ -77,9 +77,12 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 9999;
+  z-index: 1; /* Very low z-index - behind all content */
   pointer-events: none;
+  transition: opacity 0.5s ease-out;
 }
+
+
 
 .mk-gooery .b1,
 .mk-gooery .b2,
@@ -90,6 +93,7 @@
   background-color: var(--themeColor2);
   box-shadow: 10px 10px 5px 0 rgba(0, 0, 0, 0.75);
   opacity: 0.6;
+  transition: opacity 0.3s ease-out;
 }
 
 /* Bubble sizes - responsive using CSS variables */
@@ -205,7 +209,7 @@
   background-color: red;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 10002;
+  z-index: 10002; /* Second highest for precision cursor */
   transform: translate(-50%, -50%);
   transition: transform 0.05s ease-out;
 }
@@ -218,7 +222,7 @@
   border: 1px solid red;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 10001;
+  z-index: 10001; /* Third highest */
   transform: translate(-50%, -50%);
   transition: transform 0.1s ease-out, border-color 0.3s ease-out, background-color 0.3s ease-out;
   animation: pulse-circle 1.5s infinite alternate ease-in-out;
@@ -403,4 +407,6 @@
   opacity: 0.5;
   box-shadow: 0 0 100px rgba(255, 215, 0, 0.6);
 }
-*/ 
+*/
+
+ 
