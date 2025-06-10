@@ -1,3 +1,156 @@
+/* CSS Variables for theming */
+:root {
+  --themeColor2: #F5D061; /* Yellow gooey color */
+  --themeColor4: #F5D061; /* Yellow lines color */
+  --circleDividant: 8; /* Responsive scaling factor */
+}
+
+/* Hide default cursor globally when cursor is active */
+* {
+  cursor: none !important;
+}
+
+/* Cursor Lines */
+.mk-cursor-line-box {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.mk-cursor-line-box .mk-cursor-line-bottom-1,
+.mk-cursor-line-box .mk-cursor-line-bottom-2,
+.mk-cursor-line-box .mk-cursor-line-right-1,
+.mk-cursor-line-box .mk-cursor-line-right-2 {
+  position: fixed;
+  transform: scale(0);
+  opacity: 0.5;
+  transition: all 0.1s linear;
+}
+
+.mk-cursor-line-box .mk-cursor-line-right-1 {
+  border-top: 1px dashed var(--themeColor4);
+  transform-origin: 0 0;
+  width: 100%;
+  height: 0;
+}
+
+.mk-cursor-line-box .mk-cursor-line-right-2 {
+  border-top: 1px dashed var(--themeColor4);
+  transform-origin: top right;
+  width: 100%;
+  height: 0;
+}
+
+.mk-cursor-line-box .mk-cursor-line-bottom-1 {
+  border-left: 1px dashed var(--themeColor4);
+  transform-origin: 0 0;
+  width: 0;
+  height: 100%;
+}
+
+.mk-cursor-line-box .mk-cursor-line-bottom-2 {
+  border-left: 1px dashed var(--themeColor4);
+  transform-origin: top right;
+  width: 0;
+  height: 100%;
+}
+
+/* Active state for lines - show on mouse click */
+.mk-cursor-line-box:active .mk-cursor-line-bottom-1,
+.mk-cursor-line-box:active .mk-cursor-line-bottom-2,
+.mk-cursor-line-box:active .mk-cursor-line-right-1,
+.mk-cursor-line-box:active .mk-cursor-line-right-2 {
+  pointer-events: none;
+  transform: scale(1);
+}
+
+/* Gooey Cursor */
+.mk-gooery .hooks-main {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.mk-gooery .b1,
+.mk-gooery .b2,
+.mk-gooery .b3 {
+  position: absolute;
+  will-change: transform;
+  border-radius: 50%;
+  background-color: var(--themeColor2);
+  box-shadow: 10px 10px 5px 0 rgba(0, 0, 0, 0.75);
+  opacity: 0.6;
+}
+
+/* Bubble sizes - responsive using CSS variables */
+.mk-gooery .b1 {
+  width: calc(170vw / var(--circleDividant));
+  height: calc(170vw / var(--circleDividant));
+}
+
+.mk-gooery .b2 {
+  width: calc(350vw / var(--circleDividant));
+  height: calc(350vw / var(--circleDividant));
+}
+
+.mk-gooery .b3 {
+  width: calc(200vw / var(--circleDividant));
+  height: calc(200vw / var(--circleDividant));
+}
+
+/* Light spots on bubbles */
+.mk-gooery .b1:after,
+.mk-gooery .b2:after,
+.mk-gooery .b3:after {
+  content: "";
+  position: absolute;
+  top: calc(50vw / var(--circleDividant));
+  left: calc(50vw / var(--circleDividant));
+  width: calc(50vw / var(--circleDividant));
+  height: calc(50vw / var(--circleDividant));
+  border-radius: 50%;
+  background: hsla(0, 0%, 100%, 0.8);
+}
+
+.mk-gooery .b2:after {
+  top: calc(7vw / var(--circleDividant));
+  left: calc(7vw / var(--circleDividant));
+  width: calc(7vw / var(--circleDividant));
+  height: calc(7vw / var(--circleDividant));
+}
+
+.mk-gooery .b3:after {
+  top: calc(50vw / var(--circleDividant));
+  left: calc(50vw / var(--circleDividant));
+  width: calc(50vw / var(--circleDividant));
+  height: calc(50vw / var(--circleDividant));
+}
+
+.mk-gooery .hooks-filter {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  filter: url(#goo);
+  overflow: hidden;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 800px) {
+  :root {
+    --circleDividant: 3;
+  }
+}
+
 /* Hide default cursor only when GooeyCursor is active (professional theme) */
 .cursor-none-active {
   cursor: none !important;
@@ -134,47 +287,6 @@
   height: 40px;
   margin-left: -20px;
   margin-top: -20px;
-}
-
-.mk-cursor-line-box {
-    position: fixed;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 10000;
-    transform-origin: center center;
-}
-
-.mk-cursor-line-right-1 {
-    position: absolute;
-    top: -20px;
-    left: 19px;
-    width: 2px;
-    height: 40px;
-    background-image: linear-gradient(
-        to bottom,
-        #F5D061 40%,
-        rgba(255, 255, 255, 0) 0%
-    );
-    background-position: top;
-    background-size: 100% 5px;
-    background-repeat: repeat-y;
-}
-
-.mk-cursor-line-bottom-1 {
-    position: absolute;
-    top: 19px;
-    left: -20px;
-    height: 2px;
-    width: 40px;
-    background-image: linear-gradient(
-        to right,
-        #F5D061 40%,
-        rgba(255, 255, 255, 0) 0%
-    );
-    background-position: left;
-    background-size: 5px 100%;
-    background-repeat: repeat-x;
 }
 
 .cursor-container {

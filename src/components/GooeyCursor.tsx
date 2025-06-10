@@ -1,119 +1,141 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSpring, animated, to } from '@react-spring/web';
-import '../styles/GooeyCursor.css';
+'use client'
 
-const GooeyCursor = () => {
-  const [isInside, setIsInside] = useState(false);
-  const isInsideRef = useRef(isInside);
-  isInsideRef.current = isInside;
+import React, { useEffect, useRef } from 'react'
+import '../styles/GooeyCursor.css'
 
-  // Red dot - follows cursor immediately (no lag)
-  const [dotSpring, dotApi] = useSpring(() => ({
-    x: -200,
-    y: -200,
-    config: { mass: 1, tension: 300, friction: 30 }, // Fast response
-  }));
-
-  // Red circle - follows cursor with slight lag
-  const [circleSpring, circleApi] = useSpring(() => ({
-    x: -200,
-    y: -200,
-    config: { mass: 2, tension: 120, friction: 40 }, // Medium response
-  }));
-
-  // Yellow gooey bubble - follows cursor with more lag
-  const [bubbleSpring, bubbleApi] = useSpring(() => ({
-    x: -200,
-    y: -200,
-    config: { mass: 4, tension: 80, friction: 50 }, // Slow response for gooey effect
-  }));
+const GooeyCursor: React.FC = () => {
+  const cursorLineBoxRef = useRef<HTMLDivElement>(null)
+  const b1Ref = useRef<HTMLDivElement>(null)
+  const b2Ref = useRef<HTMLDivElement>(null)
+  const b3Ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const heroSection = document.getElementById('home');
-      if (!heroSection) return;
+      const { clientX: x, clientY: y } = e
 
-      const rect = heroSection.getBoundingClientRect();
-      const isCurrentlyInside = (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      );
-      
-      if (isCurrentlyInside !== isInsideRef.current) {
-        setIsInside(isCurrentlyInside);
+      // Position cursor lines at mouse position
+      if (cursorLineBoxRef.current) {
+        cursorLineBoxRef.current.style.left = `${x}px`
+        cursorLineBoxRef.current.style.top = `${y}px`
       }
-      
-      if (isCurrentlyInside) {
-        // Update all cursor elements with different timing
-        dotApi.start({ x: e.clientX, y: e.clientY });
-        circleApi.start({ x: e.clientX, y: e.clientY });
-        bubbleApi.start({ x: e.clientX, y: e.clientY });
-      }
-    };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    
+      // Animate gooey bubbles with different lag and physics
+      if (b1Ref.current) {
+        // Fastest bubble - direct follow
+        b1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+      }
+
+      if (b2Ref.current) {
+        // Medium lag bubble
+        const currentTransform = b2Ref.current.style.transform
+        const currentX = currentTransform.includes('translate3d') 
+          ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+          : 0
+        const currentY = currentTransform.includes('translate3d')
+          ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+          : 0
+        
+        const deltaX = (x - currentX) * 0.08
+        const deltaY = (y - currentY) * 0.08
+        
+        const newX = currentX + deltaX
+        const newY = currentY + deltaY
+        
+        b2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+      }
+
+      if (b3Ref.current) {
+        // Slowest lag bubble
+        const currentTransform = b3Ref.current.style.transform
+        const currentX = currentTransform.includes('translate3d')
+          ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+          : 0
+        const currentY = currentTransform.includes('translate3d')
+          ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+          : 0
+        
+        const deltaX = (x - currentX) * 0.04
+        const deltaY = (y - currentY) * 0.04
+        
+        const newX = currentX + deltaX
+        const newY = currentY + deltaY
+        
+        b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+      }
+    }
+
+    const handleMouseDown = () => {
+      if (cursorLineBoxRef.current) {
+        cursorLineBoxRef.current.classList.add('active')
+      }
+    }
+
+    const handleMouseUp = () => {
+      if (cursorLineBoxRef.current) {
+        cursorLineBoxRef.current.classList.remove('active')
+      }
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = 'none'
+
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [dotApi, circleApi, bubbleApi]);
-
-  if (!isInside) {
-    return null;
-  }
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = 'auto'
+    }
+  }, [])
 
   return (
     <>
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
+      {/* Cursor Lines */}
+      <div 
+        ref={cursorLineBoxRef}
+        className="mk-cursor-line-box" 
+        style={{ top: 0, left: 0 }}
+      >
+        <div className="mk-cursor-line-right-1"></div>
+        <div className="mk-cursor-line-right-2"></div>
+        <div className="mk-cursor-line-bottom-1"></div>
+        <div className="mk-cursor-line-bottom-2"></div>
+      </div>
+
+      {/* Gooey Bubbles */}
+      <div className="mk-gooery">
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <filter id="goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"
-              result="goo"
+            <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="30" />
+            <feColorMatrix 
+              in="blur" 
+              values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 30 -7" 
             />
-            <feBlend in="SourceGraphic" in2="goo" />
           </filter>
-        </defs>
-      </svg>
-      
-      <div className="gooey-container">
-        {/* Yellow gooey bubble - background layer */}
-        <animated.div 
-          className="cursor-bubble-gooey"
-          style={{ 
-            transform: to([bubbleSpring.x, bubbleSpring.y], (x, y) => 
-              `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
-            ) 
-          }}
-        />
-        
-        {/* Red circle - middle layer */}
-        <animated.div 
-          className="cursor-circle-red"
-          style={{ 
-            transform: to([circleSpring.x, circleSpring.y], (x, y) => 
-              `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
-            ) 
-          }}
-        />
-        
-        {/* Red dot - top layer */}
-        <animated.div 
-          className="cursor-dot-red"
-          style={{ 
-            transform: to([dotSpring.x, dotSpring.y], (x, y) => 
-              `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
-            ) 
-          }}
-        />
+        </svg>
+        <div className="hooks-main">
+          <div className="hooks-filter">
+            <div 
+              ref={b1Ref}
+              className="b1" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+            <div 
+              ref={b2Ref}
+              className="b2" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+            <div 
+              ref={b3Ref}
+              className="b3" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+          </div>
+        </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default GooeyCursor; 
+export default GooeyCursor 
