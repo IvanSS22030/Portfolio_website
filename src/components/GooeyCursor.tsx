@@ -5,6 +5,8 @@ import '../styles/GooeyCursor.css'
 
 const GooeyCursor: React.FC = () => {
   const cursorLineBoxRef = useRef<HTMLDivElement>(null)
+  const redDotRef = useRef<HTMLDivElement>(null)
+  const redCircleRef = useRef<HTMLDivElement>(null)
   const b1Ref = useRef<HTMLDivElement>(null)
   const b2Ref = useRef<HTMLDivElement>(null)
   const b3Ref = useRef<HTMLDivElement>(null)
@@ -17,6 +19,18 @@ const GooeyCursor: React.FC = () => {
       if (cursorLineBoxRef.current) {
         cursorLineBoxRef.current.style.left = `${x}px`
         cursorLineBoxRef.current.style.top = `${y}px`
+      }
+
+      // Position red dot at mouse position (immediate follow)
+      if (redDotRef.current) {
+        redDotRef.current.style.left = `${x}px`
+        redDotRef.current.style.top = `${y}px`
+      }
+
+      // Position red circle at mouse position (slight lag)
+      if (redCircleRef.current) {
+        redCircleRef.current.style.left = `${x}px`
+        redCircleRef.current.style.top = `${y}px`
       }
 
       // Animate gooey bubbles with different lag and physics
@@ -68,11 +82,23 @@ const GooeyCursor: React.FC = () => {
       if (cursorLineBoxRef.current) {
         cursorLineBoxRef.current.classList.add('active')
       }
+      if (redDotRef.current) {
+        redDotRef.current.classList.add('click')
+      }
+      if (redCircleRef.current) {
+        redCircleRef.current.classList.add('click')
+      }
     }
 
     const handleMouseUp = () => {
       if (cursorLineBoxRef.current) {
         cursorLineBoxRef.current.classList.remove('active')
+      }
+      if (redDotRef.current) {
+        redDotRef.current.classList.remove('click')
+      }
+      if (redCircleRef.current) {
+        redCircleRef.current.classList.remove('click')
       }
     }
 
@@ -102,6 +128,18 @@ const GooeyCursor: React.FC = () => {
         <div className="mk-cursor-line-bottom-1"></div>
         <div className="mk-cursor-line-bottom-2"></div>
       </div>
+
+      {/* Red Dot */}
+      <div 
+        ref={redDotRef}
+        className="mk-red-dot"
+      ></div>
+
+      {/* Red Circle */}
+      <div 
+        ref={redCircleRef}
+        className="mk-red-circle"
+      ></div>
 
       {/* Gooey Bubbles */}
       <div className="mk-gooery">
