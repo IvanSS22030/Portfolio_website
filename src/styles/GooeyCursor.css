@@ -66,23 +66,33 @@
   transform: scale(1);
 }
 
-/* Gooey Cursor */
-.mk-gooery .hooks-main {
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
+/* Gooey Cursor - Absolutely Restricted to Hero Section */
+.mk-gooery {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1; /* Very low z-index - behind all content */
+  width: 100vw;
+  height: 100vh; /* Exactly one viewport height */
+  overflow: hidden; /* Critical: clips everything outside */
+  z-index: 1;
   pointer-events: none;
-  transition: opacity 0.5s ease-out;
 }
 
-
+.mk-gooery .hooks-main {
+  overflow: hidden; /* Double safety clipping */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%; /* Use parent container height */
+  position: relative; /* Changed from fixed to relative */
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.5s ease-out;
+  clip-path: inset(0 0 0 0); /* Ensure nothing bleeds outside the container */
+}
 
 .mk-gooery .b1,
 .mk-gooery .b2,
@@ -145,7 +155,7 @@
   width: 100%;
   height: 100%;
   filter: url(#goo);
-  overflow: hidden;
+  overflow: hidden; /* Prevent any gooey effects from bleeding outside */
 }
 
 /* Responsive breakpoints */

@@ -7,49 +7,51 @@ const GooeyCursor: React.FC = () => {
   const cursorLineBoxRef = useRef<HTMLDivElement>(null)
   const redDotRef = useRef<HTMLDivElement>(null)
   const redCircleRef = useRef<HTMLDivElement>(null)
+  const goeryContainerRef = useRef<HTMLDivElement>(null)
   const b1Ref = useRef<HTMLDivElement>(null)
   const b2Ref = useRef<HTMLDivElement>(null)
   const b3Ref = useRef<HTMLDivElement>(null)
   
-  // State to track if we're in the hero section
-  const [isInHeroSection, setIsInHeroSection] = useState(true)
+  // State to track if we should show gooey bubbles (only when scroll is 0)
+  const [showGoeyBubbles, setShowGoeyBubbles] = useState(true)
 
   useEffect(() => {
-    // Scroll detection to control gooey bubbles
     const handleScroll = () => {
       const scrollY = window.scrollY
-      const windowHeight = window.innerHeight
       
-      // Consider hero section as roughly the first viewport height
-      // Adjust this threshold based on your actual hero section height
-      const heroSectionHeight = windowHeight * 0.8 // 80% of viewport height
+      // Only show gooey bubbles when there's absolutely no scroll
+      const shouldShowBubbles = scrollY === 0
+      setShowGoeyBubbles(shouldShowBubbles)
       
-      setIsInHeroSection(scrollY < heroSectionHeight)
+      // Immediately hide the container when scrolling
+      if (goeryContainerRef.current) {
+        goeryContainerRef.current.style.display = shouldShowBubbles ? 'block' : 'none'
+      }
     }
 
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e
 
-      // Position cursor lines at mouse position
+      // Position cursor lines at mouse position (GLOBAL)
       if (cursorLineBoxRef.current) {
         cursorLineBoxRef.current.style.left = `${x}px`
         cursorLineBoxRef.current.style.top = `${y}px`
       }
 
-      // Position red dot at mouse position (immediate follow) - ALWAYS ACTIVE
+      // Position red dot at mouse position (GLOBAL - always active)
       if (redDotRef.current) {
         redDotRef.current.style.left = `${x}px`
         redDotRef.current.style.top = `${y}px`
       }
 
-      // Position red circle at mouse position (slight lag) - ALWAYS ACTIVE
+      // Position red circle at mouse position (GLOBAL - always active)
       if (redCircleRef.current) {
         redCircleRef.current.style.left = `${x}px`
         redCircleRef.current.style.top = `${y}px`
       }
 
-      // Animate gooey bubbles with different lag and physics - ONLY IN HERO SECTION
-      if (isInHeroSection) {
+      // Animate gooey bubbles ONLY when we haven't scrolled at all
+      if (showGoeyBubbles && window.scrollY === 0) {
         if (b1Ref.current) {
           // Fastest bubble - direct follow
           b1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
@@ -93,7 +95,6 @@ const GooeyCursor: React.FC = () => {
           b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
       }
-      // When not in hero section, bubbles don't move (they stay "stuck" in their last position)
     }
 
     const handleMouseDown = () => {
@@ -136,10 +137,12 @@ const GooeyCursor: React.FC = () => {
       document.removeEventListener('scroll', handleScroll)
       document.body.style.cursor = 'auto'
     }
-  }, []) // Removed isInHeroSection dependency to fix red cursor disappearing
+  }, [showGoeyBubbles])
 
   return (
     <>
+      {/* Global Cursor Elements - Work everywhere on the website */}
+      
       {/* Cursor Lines */}
       <div 
         ref={cursorLineBoxRef}
@@ -152,20 +155,24 @@ const GooeyCursor: React.FC = () => {
         <div className="mk-cursor-line-bottom-2"></div>
       </div>
 
-      {/* Red Dot */}
+      {/* Red Dot - Global Cursor */}
       <div 
         ref={redDotRef}
         className="mk-red-dot"
       ></div>
 
-      {/* Red Circle */}
+      {/* Red Circle - Global Cursor */}
       <div 
         ref={redCircleRef}
         className="mk-red-circle"
       ></div>
 
-      {/* Gooey Bubbles */}
-      <div className="mk-gooery">
+      {/* Hero Section Only - Gooey Bubbles (Completely hidden when scrolled) */}
+      <div 
+        ref={goeryContainerRef}
+        className="mk-gooery"
+        style={{ display: showGoeyBubbles ? 'block' : 'none' }}
+      >
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="30" />
