@@ -1,0 +1,140 @@
+/* style.css */
+
+/* --- Global and Root Variables --- */
+:root {
+    /* Define your theme colors. These were in the original mk- styles */
+    /* For Gooey Bubbles (Yellow) */
+    --themeColor1: #121212; /* Example background, adjust as per your original theme */
+    --themeColor2: #F5D061; /* YELLOW for the gooey bubbles */
+    /* --themeColor3: #yourOriginalAccent1; */ /* Define if used by original */
+    /* For Dashed Click Lines (e.g., Cyan or original color) */
+    --themeColor4: #00bcd4; /* Example: Cyan for dashed lines. Use original color if known */
+
+    /* For Gooey Bubbles size calculation */
+    --circleDividant: 8;
+
+    /* General page styles from your example */
+    font-family: sans-serif;
+    background-color: var(--themeColor1); /* Use your theme background */
+    color: #fff; /* Default text color */
+}
+
+@media only screen and (max-width: 800px) {
+    :root {
+        --circleDividant: 3;
+    }
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* Prevent scrollbars from appearing due to cursor movement */
+    background-color: #121212; /* Example background */
+    color: #fff;
+    font-family: sans-serif;
+}
+
+/* Content styling from your example for the demo page */
+.content {
+    padding: 50px;
+    text-align: center;
+    min-height: 100vh; /* Ensure content takes full height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.content a,.content button {
+    color: #00bcd4;
+    text-decoration: none;
+    font-size: 1.2em;
+    padding: 10px 20px;
+    border: 1px solid #00bcd4;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.content a:hover,.content button:hover {
+    background-color: #00bcd4;
+    color: #121212;
+}
+
+/* Custom Cursor Container */
+.custom-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none; /* Crucial: allows clicks to pass through */
+    z-index: 9999; /* Ensures cursor is always on top */
+    /* Initial state, will be controlled by JS for visibility */
+    display: block; /* Default to block, JS will hide if needed */
+}
+
+/* Red Dot */
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%); /* Center the dot */
+    transition: transform 0.05s ease-out; /* Slight lag for dot */
+}
+
+/* Red Circle */
+.cursor-circle {
+    width: 30px;
+    height: 30px;
+    border: 1px solid red;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%); /* Center the circle */
+    transition: transform 0.1s ease-out, border-color 0.3s ease-out, background-color 0.3s ease-out; /* Smooth follow and animation */
+    animation: pulse-circle 1.5s infinite alternate ease-in-out; /* Continuous pulse */
+}
+
+/* Yellow Bubble */
+.cursor-bubble {
+    width: 50px;
+    height: 50px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+    opacity: 0; /* Initially hidden */
+    transform: translate(-50%, -50%) scale(0); /* Initially scaled down */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Smooth appearance */
+}
+
+/* Animations */
+@keyframes pulse-circle {
+    from {
+        transform: translate(-50%, -50%) scale(1);
+        border-color: red;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1.1);
+        border-color: rgba(255, 0, 0, 0.5);
+    }
+}
+
+/* Click animation for dot and circle */
+.cursor-dot.click {
+    transform: translate(-50%, -50%) scale(0.8);
+    background-color: darkred;
+}
+.cursor-circle.click {
+    transform: translate(-50%, -50%) scale(0.9);
+    border-color: darkred;
+}
+
+/* Hover active state for circle and bubble */
+.cursor-circle.hover-active {
+    transform: translate(-50%, -50%) scale(1.5);
+    background-color: rgba(255, 0, 0, 0.2);
+}
+.cursor-bubble.hover-active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}

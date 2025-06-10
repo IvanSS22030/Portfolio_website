@@ -7,16 +7,25 @@ const GooeyCursor = () => {
   const isInsideRef = useRef(isInside);
   isInsideRef.current = isInside;
 
-  const [bubbleSpring, bubbleApi] = useSpring(() => ({
-    x: -200, // Start off-screen
-    y: -200,
-    config: { mass: 4, tension: 80, friction: 50 },
-  }));
-
-  const [trailSpring, trailApi] = useSpring(() => ({
+  // Red dot - follows cursor immediately (no lag)
+  const [dotSpring, dotApi] = useSpring(() => ({
     x: -200,
     y: -200,
-    config: { mass: 3, tension: 100, friction: 45 },
+    config: { mass: 1, tension: 300, friction: 30 }, // Fast response
+  }));
+
+  // Red circle - follows cursor with slight lag
+  const [circleSpring, circleApi] = useSpring(() => ({
+    x: -200,
+    y: -200,
+    config: { mass: 2, tension: 120, friction: 40 }, // Medium response
+  }));
+
+  // Yellow gooey bubble - follows cursor with more lag
+  const [bubbleSpring, bubbleApi] = useSpring(() => ({
+    x: -200,
+    y: -200,
+    config: { mass: 4, tension: 80, friction: 50 }, // Slow response for gooey effect
   }));
 
   useEffect(() => {
@@ -37,8 +46,10 @@ const GooeyCursor = () => {
       }
       
       if (isCurrentlyInside) {
+        // Update all cursor elements with different timing
+        dotApi.start({ x: e.clientX, y: e.clientY });
+        circleApi.start({ x: e.clientX, y: e.clientY });
         bubbleApi.start({ x: e.clientX, y: e.clientY });
-        trailApi.start({ x: e.clientX, y: e.clientY });
       }
     };
 
@@ -47,7 +58,7 @@ const GooeyCursor = () => {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [bubbleApi, trailApi]);
+  }, [dotApi, circleApi, bubbleApi]);
 
   if (!isInside) {
     return null;
@@ -71,18 +82,31 @@ const GooeyCursor = () => {
       </svg>
       
       <div className="gooey-container">
+        {/* Yellow gooey bubble - background layer */}
         <animated.div 
-          className="cursor-bubble"
+          className="cursor-bubble-gooey"
           style={{ 
             transform: to([bubbleSpring.x, bubbleSpring.y], (x, y) => 
               `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
             ) 
           }}
         />
+        
+        {/* Red circle - middle layer */}
         <animated.div 
-          className="cursor-trail"
+          className="cursor-circle-red"
           style={{ 
-            transform: to([trailSpring.x, trailSpring.y], (x, y) => 
+            transform: to([circleSpring.x, circleSpring.y], (x, y) => 
+              `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+            ) 
+          }}
+        />
+        
+        {/* Red dot - top layer */}
+        <animated.div 
+          className="cursor-dot-red"
+          style={{ 
+            transform: to([dotSpring.x, dotSpring.y], (x, y) => 
               `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
             ) 
           }}
