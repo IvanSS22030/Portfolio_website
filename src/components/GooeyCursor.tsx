@@ -26,6 +26,7 @@ const GooeyCursor: React.FC = () => {
   const DELAY_TIME =5 // 1 second in milliseconds
   
   const mousePositionRef = useRef({ x: 0, y: 0 });
+  const cursorPositionRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number | null>(null);
   
   // Helper function to constrain positions within hero section (for professional theme)
@@ -105,8 +106,10 @@ const GooeyCursor: React.FC = () => {
       const relativeX = x - (heroRect?.left || 0)
       const relativeY = y - (heroRect?.top || 0)
 
-      // Update the shared mouse position for the animation loop
+      // Update the shared mouse position for the bubble animation loop
       mousePositionRef.current = { x: relativeX, y: relativeY };
+      // Update the shared global cursor position for the red circle animation
+      cursorPositionRef.current = { x, y };
 
       // Position cursor lines at mouse position (GLOBAL)
       if (cursorLineBoxRef.current) {
@@ -119,25 +122,26 @@ const GooeyCursor: React.FC = () => {
         redDotRef.current.style.left = `${x}px`
         redDotRef.current.style.top = `${y}px`
       }
-
-      // Position red circle to follow red dot with more delay (GLOBAL - always active)
-      if (redCircleRef.current) {
-        const currentLeft = parseFloat(redCircleRef.current.style.left) || x
-        const currentTop = parseFloat(redCircleRef.current.style.top) || y
-        
-        // Reduced speed to 50% for ultra smooth fluid animation (was 0.08, now 0.032)
-        const deltaX = (x - currentLeft) * 0.025
-        const deltaY = (y - currentTop) * 0.025
-        
-        const newX = currentLeft + deltaX
-        const newY = currentTop + deltaY
-        
-        redCircleRef.current.style.left = `${newX}px`
-        redCircleRef.current.style.top = `${newY}px`
-      }
     };
     
     const animate = () => {
+      // Animate red circle to follow the cursor dot continuously
+      if (redCircleRef.current) {
+        const { x: targetX, y: targetY } = cursorPositionRef.current;
+        const currentLeft = parseFloat(redCircleRef.current.style.left) || targetX;
+        const currentTop = parseFloat(redCircleRef.current.style.top) || targetY;
+
+        const easing = 0.025; // Smoothing factor for the chase effect
+        const deltaX = (targetX - currentLeft) * easing;
+        const deltaY = (targetY - currentTop) * easing;
+
+        const newX = currentLeft + deltaX;
+        const newY = currentTop + deltaY;
+
+        redCircleRef.current.style.left = `${newX}px`;
+        redCircleRef.current.style.top = `${newY}px`;
+      }
+
       const { x, y } = mousePositionRef.current; // Use the stored mouse position
 
       // Animate gooey bubbles - always for professional theme, only at scroll=0 for personal theme
