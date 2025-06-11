@@ -17,6 +17,7 @@ const GooeyCursor: React.FC = () => {
   
   // State to track if we should show gooey bubbles (only when scroll is 0)
   const [showGoeyBubbles, setShowGoeyBubbles] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
   
   // Ref to track the hero section for constraint bounds
   const heroSectionRef = useRef<HTMLElement | null>(null)
@@ -98,6 +99,10 @@ const GooeyCursor: React.FC = () => {
     }
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
+
       const { clientX: x, clientY: y } = e
 
       // For the new absolute positioning, we need the mouse position
@@ -378,6 +383,9 @@ const GooeyCursor: React.FC = () => {
       }
     }
 
+    // Run the scroll handler once on mount to set the initial state correctly
+    handleScroll();
+
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -401,7 +409,7 @@ const GooeyCursor: React.FC = () => {
       }
       document.body.style.cursor = 'auto'
     }
-  }, [showGoeyBubbles])
+  }, []) // Dependency array is empty to run only once on mount and unmount
 
   return (
     <>
@@ -446,7 +454,7 @@ const GooeyCursor: React.FC = () => {
             />
           </filter>
         </svg>
-        <div className="hooks-main">
+        <div className="hooks-main" style={{ opacity: isInitialized ? 1 : 0 }}>
           <div className="hooks-filter">
             {/* Center bubbles - create the main fluid animation */}
             <div 
