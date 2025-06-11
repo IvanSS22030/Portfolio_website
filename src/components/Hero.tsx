@@ -505,7 +505,7 @@ const Hero: React.FC = () => {
           )}
         </h1>
         <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl">
-          Web Developer & Software Engineer
+          Data Engineer & Software Engineer
         </p>
         <div className="flex space-x-4">
           <a 

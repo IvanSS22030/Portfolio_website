@@ -71,9 +71,9 @@ const Header: React.FC = () => {
           className={`text-2xl font-bold ${currentTheme.logo}`}
         >
           {theme === 'professional' ? (
-            "Ivan Joel Sanchez"
+            "Ivan Joel Sanchez Santana"
           ) : (
-            <span className="font-serif tracking-wider">Ivan Joel Sanchez</span>
+            <span className="font-serif tracking-wider">Ivan Joel Sanchez Santana</span>
           )}
         </a>
 

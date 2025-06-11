@@ -214,10 +214,14 @@ const About: React.FC = () => {
             {/* Text content with animations */}
             <div className={`md:w-1/2 ${isInView ? 'animate-[fadeInRight_0.7s_ease-in-out_0.3s_forwards]' : 'opacity-0'}`}>
               <h3 className={`text-2xl font-semibold text-gray-800 mb-4 ${isInView ? 'animate-[fadeInUp_0.6s_ease-in-out_0.7s_forwards]' : 'opacity-0'}`}>
-                Web Developer & Software Engineer
+                Data Engineer & Software Engineer
               </h3>
               <p className={`text-gray-600 mb-6 leading-relaxed ${isInView ? 'animate-[fadeInUp_0.6s_ease-in-out_0.9s_forwards]' : 'opacity-0'}`}>
-                With a passion for creating elegant, efficient solutions to complex problems, I've dedicated my career to mastering the art and science of software development. My expertise spans front-end and back-end technologies, with a focus on creating exceptional user experiences.
+              I’m a Software Engineer with 6 years of hands-on experience in the data space. Throughout my career, I've worked extensively with Excel, Python, and various flavors of SQL—including PostgreSQL, T-SQL, and standard SQL. I've built insightful, action-driven dashboards using both Power BI and Tableau to support decision-making across teams.
+
+My expertise spans web scraping, automation, and building robust data pipelines, enabling me to work efficiently with diverse datasets. What truly sets me apart is my insatiable curiosity and ability to grasp complex, abstract concepts quickly and effectively. I’m also passionate about learning—whether it’s technology, languages, music, or science, I’m always exploring something new.
+
+I value clarity, creativity, and continuous growth, and I enjoy collaborating with people who share my passion for driving impact through innovative, efficient solutions.
               </p>
               <p className={`text-gray-600 mb-6 leading-relaxed ${isInView ? 'animate-[fadeInUp_0.6s_ease-in-out_1.1s_forwards]' : 'opacity-0'}`}>
                 When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or sharing my knowledge through technical writing and mentoring.

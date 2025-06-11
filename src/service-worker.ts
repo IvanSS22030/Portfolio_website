@@ -99,7 +99,7 @@ self.addEventListener('install', (event) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Offline | Ivan Joel Sanchez</title>
+        <title>Offline | Ivan Joel Sanchez Santana </title>
         <style>
           body {
             margin: 0;

@@ -3,23 +3,23 @@ import { WorkExperience } from '../types';
 export const experiences: WorkExperience[] = [
   {
     id: 1,
-    company: "Tech Innovations Inc.",
-    position: "Senior Frontend Developer",
-    period: "2020 - Present",
-    description: "Leading the frontend development team, implementing modern UI/UX practices, and mentoring junior developers."
+    company: "Thryv",
+    position: "Backend Developer",
+    period: "2025 - Present",
+    description: "I work with automation of reports and processes using RPA and agentic automation and different CRMs that require me to create custom scripts and queries to fetch data and create reports. I also give maintenance to the backend of a web application that is used by the company."
   },
   {
     id: 2,
-    company: "Digital Solutions LLC",
-    position: "Full Stack Developer",
-    period: "2018 - 2020",
-    description: "Developed and maintained web applications using React, Node.js, and MongoDB. Implemented CI/CD pipelines."
+    company: "SiriusXM",
+    position: "Forecaster",
+    period: "2024 - 2025",
+    description: "I worked with predicting call volume and the migration of systems from LivePerson to AWS Amazon Connect. Created data pipelines to make forecasts and reports for the company."
   },
   {
     id: 3,
-    company: "Creative Web Studios",
-    position: "Web Developer",
-    period: "2016 - 2018",
-    description: "Created responsive websites for clients across various industries using JavaScript, HTML, and CSS."
+    company: "Verizon",
+    position: "Workforce Scheduler",
+    period: "2018 - 2024",
+    description: "Created staffing reports, capacity planning, and mentored new employees in the workforce department. Supervised a small group of employees and created and optimized schedules for more than 800 employees across the United States and the Philippines."
   }
 ];
