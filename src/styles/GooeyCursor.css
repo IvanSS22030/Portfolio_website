@@ -94,6 +94,43 @@
   clip-path: inset(0 0 0 0); /* Ensure nothing bleeds outside the container */
 }
 
+/* Center bubbles - create the main fluid animation */
+.mk-gooery .bc1,
+.mk-gooery .bc2 {
+  position: absolute;
+  will-change: transform;
+  border-radius: 50%;
+  background-color: var(--themeColor2);
+  box-shadow: 10px 10px 5px 0 rgba(0, 0, 0, 0.75);
+  opacity: 0.9;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Center bubble sizes - same size for fluid interaction */
+.mk-gooery .bc1 {
+  width: calc(80vw / var(--circleDividant));
+  height: calc(80vw / var(--circleDividant));
+}
+
+.mk-gooery .bc2 {
+  width: calc(80vw / var(--circleDividant));
+  height: calc(80vw / var(--circleDividant));
+}
+
+/* Light spots on center bubbles */
+.mk-gooery .bc1:after,
+.mk-gooery .bc2:after {
+  content: "";
+  position: absolute;
+  top: calc(20vw / var(--circleDividant));
+  left: calc(20vw / var(--circleDividant));
+  width: calc(20vw / var(--circleDividant));
+  height: calc(20vw / var(--circleDividant));
+  border-radius: 50%;
+  background: hsla(0, 0%, 100%, 0.8);
+}
+
+/* Large decorative bubbles */
 .mk-gooery .b1,
 .mk-gooery .b2,
 .mk-gooery .b3 {

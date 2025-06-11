@@ -8,6 +8,8 @@ const GooeyCursor: React.FC = () => {
   const redDotRef = useRef<HTMLDivElement>(null)
   const redCircleRef = useRef<HTMLDivElement>(null)
   const goeryContainerRef = useRef<HTMLDivElement>(null)
+  const bc1Ref = useRef<HTMLDivElement>(null) // Center bubble 1 (follows mouse directly)
+  const bc2Ref = useRef<HTMLDivElement>(null) // Center bubble 2 (follows bc1)
   const b1Ref = useRef<HTMLDivElement>(null)
   const b2Ref = useRef<HTMLDivElement>(null)
   const b3Ref = useRef<HTMLDivElement>(null)
@@ -44,17 +46,64 @@ const GooeyCursor: React.FC = () => {
         redDotRef.current.style.top = `${y}px`
       }
 
-      // Position red circle at mouse position (GLOBAL - always active)
+      // Position red circle to follow red dot with slight delay (GLOBAL - always active)
       if (redCircleRef.current) {
-        redCircleRef.current.style.left = `${x}px`
-        redCircleRef.current.style.top = `${y}px`
+        const currentLeft = parseFloat(redCircleRef.current.style.left) || x
+        const currentTop = parseFloat(redCircleRef.current.style.top) || y
+        
+        const deltaX = (x - currentLeft) * 0.15
+        const deltaY = (y - currentTop) * 0.15
+        
+        const newX = currentLeft + deltaX
+        const newY = currentTop + deltaY
+        
+        redCircleRef.current.style.left = `${newX}px`
+        redCircleRef.current.style.top = `${newY}px`
       }
 
       // Animate gooey bubbles ONLY when we haven't scrolled at all
       if (showGoeyBubbles && window.scrollY === 0) {
+        // Center bubble 1 - follows mouse directly (like red dot)
+        if (bc1Ref.current) {
+          bc1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+        }
+
+        // Center bubble 2 - follows bc1 with slight delay (like red circle)
+        if (bc2Ref.current) {
+          const currentTransform = bc2Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d') 
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : x
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : y
+          
+          const deltaX = (x - currentX) * 0.15 // Moderate lag for fluid effect
+          const deltaY = (y - currentY) * 0.15
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+        }
+
         if (b1Ref.current) {
-          // Fastest bubble - direct follow
-          b1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+          // Fastest large bubble - follows mouse with slight delay
+          const currentTransform = b1Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d') 
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : x
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : y
+          
+          const deltaX = (x - currentX) * 0.12
+          const deltaY = (y - currentY) * 0.12
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          b1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
 
         if (b2Ref.current) {
@@ -62,10 +111,10 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : 0
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : 0
+            : y
           
           const deltaX = (x - currentX) * 0.08
           const deltaY = (y - currentY) * 0.08
@@ -81,10 +130,10 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b3Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : 0
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : 0
+            : y
           
           const deltaX = (x - currentX) * 0.04
           const deltaY = (y - currentY) * 0.04
@@ -121,7 +170,21 @@ const GooeyCursor: React.FC = () => {
       }
     }
 
-    document.addEventListener('mousemove', handleMouseMove)
+    // Use requestAnimationFrame for smooth animation
+    let animationFrameId: number
+    const animate = (e: MouseEvent) => {
+      handleMouseMove(e)
+      animationFrameId = requestAnimationFrame(() => animate(e))
+    }
+    
+    const onMouseMove = (e: MouseEvent) => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+      animate(e)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
     document.addEventListener('scroll', handleScroll)
@@ -131,7 +194,10 @@ const GooeyCursor: React.FC = () => {
     handleScroll()
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+      document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mousedown', handleMouseDown)
       document.removeEventListener('mouseup', handleMouseUp)
       document.removeEventListener('scroll', handleScroll)
@@ -184,6 +250,18 @@ const GooeyCursor: React.FC = () => {
         </svg>
         <div className="hooks-main">
           <div className="hooks-filter">
+            {/* Center bubbles - create the main fluid animation */}
+            <div 
+              ref={bc1Ref}
+              className="bc1" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+            <div 
+              ref={bc2Ref}
+              className="bc2" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+            {/* Large decorative bubbles */}
             <div 
               ref={b1Ref}
               className="b1" 
