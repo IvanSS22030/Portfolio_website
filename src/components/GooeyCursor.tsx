@@ -124,14 +124,19 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : bc1Y
           
-          // Clone bubble: 0.005 speed
-          const deltaX = (bc1X - currentX) * 0.005
-          const deltaY = (bc1Y - currentY) * 0.005
+          // Clone bubble: temporarily increased to 0.015 for visibility testing
+          const deltaX = (bc1X - currentX) * 0.015
+          const deltaY = (bc1Y - currentY) * 0.015
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
           
           bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+          
+          // Debug: log to verify bc3 is moving
+          if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
+            console.log('BC3 Clone moving:', { newX, newY, deltaX, deltaY })
+          }
         }
 
         if (b1Ref.current) {
@@ -164,8 +169,8 @@ const GooeyCursor: React.FC = () => {
             : y
           
           // Outside yellow bubble: 0.015 speed
-          const deltaX = (x - currentX) * 0.015
-          const deltaY = (y - currentY) * 0.015
+          const deltaX = (x - currentX) * 0.010
+          const deltaY = (y - currentY) * 0.010
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
