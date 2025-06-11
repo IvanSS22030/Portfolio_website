@@ -53,8 +53,8 @@ const GooeyCursor: React.FC = () => {
         const currentTop = parseFloat(redCircleRef.current.style.top) || y
         
         // Reduced speed to 50% for ultra smooth fluid animation (was 0.08, now 0.032)
-        const deltaX = (x - currentLeft) * 0.032
-        const deltaY = (y - currentTop) * 0.032
+        const deltaX = (x - currentLeft) * 0.025
+        const deltaY = (y - currentTop) * 0.025
         
         const newX = currentLeft + deltaX
         const newY = currentTop + deltaY
@@ -65,12 +65,27 @@ const GooeyCursor: React.FC = () => {
 
       // Animate gooey bubbles ONLY when we haven't scrolled at all
       if (showGoeyBubbles && window.scrollY === 0) {
-        // Center bubble 1 - follows mouse directly (like red dot)
+        // Center bubble 1 - follows mouse with specified speed
         if (bc1Ref.current) {
-          bc1Ref.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate3d(-50%, -50%, 0)`
+          const currentTransform = bc1Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d') 
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : x
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : y
+          
+          // Original bubble: 0.025 speed
+          const deltaX = (x - currentX) * 0.025
+          const deltaY = (y - currentY) * 0.025
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          bc1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
 
-        // Center bubble 2 - follows bc1 with slight delay (like red circle)
+        // Center bubble 2 - follows bc1 with slight delay (keep original behavior)
         if (bc2Ref.current) {
           const currentTransform = bc2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
@@ -89,7 +104,7 @@ const GooeyCursor: React.FC = () => {
           bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
 
-        // Center bubble 3 - follows bc1 with same delay as red circle follows red dot
+        // Center bubble 3 - clone of the original with specified speed
         if (bc3Ref.current && bc1Ref.current) {
           // Extract bc1 position from its transform
           const bc1Transform = bc1Ref.current.style.transform
@@ -109,9 +124,9 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : bc1Y
           
-                     // Follow bc1 with same delay factor as red circle follows red dot (0.032)
-           const deltaX = (bc1X - currentX) * 0.032
-           const deltaY = (bc1Y - currentY) * 0.032
+          // Clone bubble: 0.005 speed
+          const deltaX = (bc1X - currentX) * 0.005
+          const deltaY = (bc1Y - currentY) * 0.005
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
@@ -139,7 +154,7 @@ const GooeyCursor: React.FC = () => {
         }
 
         if (b2Ref.current) {
-          // Medium lag bubble
+          // Outside yellow bubble with specified speed
           const currentTransform = b2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
@@ -148,8 +163,9 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : y
           
-          const deltaX = (x - currentX) * 0.08
-          const deltaY = (y - currentY) * 0.08
+          // Outside yellow bubble: 0.015 speed
+          const deltaX = (x - currentX) * 0.015
+          const deltaY = (y - currentY) * 0.015
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
