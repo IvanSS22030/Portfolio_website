@@ -16,7 +16,7 @@ const GooeyCursor: React.FC = () => {
   const b3Ref = useRef<HTMLDivElement>(null)
   
   // State to track if we should show gooey bubbles (only when scroll is 0)
-  const [showGoeyBubbles, setShowGoeyBubbles] = useState(true)
+  const [showGoeyBubbles, setShowGoeyBubbles] = useState(false)
   
   // Ref to track the hero section for constraint bounds
   const heroSectionRef = useRef<HTMLElement | null>(null)
@@ -24,6 +24,9 @@ const GooeyCursor: React.FC = () => {
   // Position history buffer for bc3 delayed following (1 second delay)
   const positionHistoryRef = useRef<Array<{x: number, y: number, timestamp: number}>>([])
   const DELAY_TIME =5 // 1 second in milliseconds
+  
+  const mousePositionRef = useRef({ x: 0, y: 0 });
+  const animationFrameRef = useRef<number | null>(null);
   
   // Helper function to constrain positions within hero section (for professional theme)
   const constrainPosition = (x: number, y: number) => {
@@ -64,6 +67,16 @@ const GooeyCursor: React.FC = () => {
     // Find the hero section for constraint bounds
     heroSectionRef.current = document.getElementById('home')
     
+    const handleMouseLeave = () => {
+      if (redDotRef.current) redDotRef.current.style.display = 'none';
+      if (redCircleRef.current) redCircleRef.current.style.display = 'none';
+    };
+
+    const handleMouseEnter = () => {
+      if (redDotRef.current) redDotRef.current.style.display = 'block';
+      if (redCircleRef.current) redCircleRef.current.style.display = 'block';
+    };
+
     const handleScroll = () => {
       const scrollY = window.scrollY
       
@@ -86,11 +99,14 @@ const GooeyCursor: React.FC = () => {
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e
 
-      // Para el nuevo posicionamiento absoluto, necesitamos la posición del ratón
-      // relativa al elemento #home, no a la ventana.
+      // For the new absolute positioning, we need the mouse position
+      // relative to the #home element, not the viewport.
       const heroRect = heroSectionRef.current?.getBoundingClientRect()
       const relativeX = x - (heroRect?.left || 0)
       const relativeY = y - (heroRect?.top || 0)
+
+      // Update the shared mouse position for the animation loop
+      mousePositionRef.current = { x: relativeX, y: relativeY };
 
       // Position cursor lines at mouse position (GLOBAL)
       if (cursorLineBoxRef.current) {
@@ -119,6 +135,10 @@ const GooeyCursor: React.FC = () => {
         redCircleRef.current.style.left = `${newX}px`
         redCircleRef.current.style.top = `${newY}px`
       }
+    };
+    
+    const animate = () => {
+      const { x, y } = mousePositionRef.current; // Use the stored mouse position
 
       // Animate gooey bubbles - always for professional theme, only at scroll=0 for personal theme
       const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
@@ -130,14 +150,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = bc1Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : relativeX
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : relativeY
+            : y
           
           // Original bubble: 0.025 speed with constraints
-          const deltaX = (relativeX - currentX) * 0.025
-          const deltaY = (relativeY - currentY) * 0.025
+          const deltaX = (x - currentX) * 0.025
+          const deltaY = (y - currentY) * 0.025
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -168,13 +188,13 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = bc2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : relativeX
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : relativeY
+            : y
           
-          const deltaX = (relativeX - currentX) * 0.15 // Moderate lag for fluid effect
-          const deltaY = (relativeY - currentY) * 0.15
+          const deltaX = (x - currentX) * 0.15 // Moderate lag for fluid effect
+          const deltaY = (y - currentY) * 0.15
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -224,10 +244,10 @@ const GooeyCursor: React.FC = () => {
             const bc1Transform = bc1Ref.current?.style.transform || ''
             const bc1X = bc1Transform.includes('translate3d') 
               ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
-              : relativeX
+              : x
             const bc1Y = bc1Transform.includes('translate3d')
               ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
-              : relativeY
+              : y
             
             const currentTransform = bc3Ref.current.style.transform
             const currentX = currentTransform.includes('translate3d') 
@@ -257,14 +277,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b1Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : relativeX
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : relativeY
+            : y
           
           // Fast bubble: 0.08 speed with constraints
-          const deltaX = (relativeX - currentX) * 0.08
-          const deltaY = (relativeY - currentY) * 0.08
+          const deltaX = (x - currentX) * 0.08
+          const deltaY = (y - currentY) * 0.08
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -282,14 +302,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : relativeX
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : relativeY
+            : y
           
           // Medium speed bubble: 0.04 speed with constraints
-          const deltaX = (relativeX - currentX) * 0.04
-          const deltaY = (relativeY - currentY) * 0.04
+          const deltaX = (x - currentX) * 0.04
+          const deltaY = (y - currentY) * 0.04
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -307,14 +327,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b3Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : relativeX
+            : x
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : relativeY
+            : y
           
           // Slow bubble: 0.02 speed with constraints
-          const deltaX = (relativeX - currentX) * 0.02
-          const deltaY = (relativeY - currentY) * 0.02
+          const deltaX = (x - currentX) * 0.02
+          const deltaY = (y - currentY) * 0.02
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -327,7 +347,8 @@ const GooeyCursor: React.FC = () => {
           b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
       }
-    }
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
 
     const handleMouseDown = () => {
       if (cursorLineBoxRef.current) {
@@ -353,37 +374,27 @@ const GooeyCursor: React.FC = () => {
       }
     }
 
-    // Use requestAnimationFrame for smooth animation
-    let animationFrameId: number
-    const animate = (e: MouseEvent) => {
-      handleMouseMove(e)
-      animationFrameId = requestAnimationFrame(() => animate(e))
-    }
-    
-    const onMouseMove = (e: MouseEvent) => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
-      }
-      animate(e)
-    }
-
-    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    document.body.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
-    document.addEventListener('scroll', handleScroll)
     document.body.style.cursor = 'none'
 
-    // Initialize scroll position check
-    handleScroll()
-
+    animationFrameRef.current = requestAnimationFrame(animate);
+    
+    // Cleanup function
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('scroll', handleScroll)
+      document.body.removeEventListener('mousemove', handleMouseMove)
+      document.body.removeEventListener('mousedown', handleMouseDown)
+      document.body.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mousedown', handleMouseDown)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.removeEventListener('scroll', handleScroll)
       document.body.style.cursor = 'auto'
     }
   }, [showGoeyBubbles])
