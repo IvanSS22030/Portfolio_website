@@ -10,6 +10,7 @@ const GooeyCursor: React.FC = () => {
   const goeryContainerRef = useRef<HTMLDivElement>(null)
   const bc1Ref = useRef<HTMLDivElement>(null) // Center bubble 1 (follows mouse directly)
   const bc2Ref = useRef<HTMLDivElement>(null) // Center bubble 2 (follows bc1)
+  const bc3Ref = useRef<HTMLDivElement>(null) // Center bubble 3 (follows red circle for fluid animation)
   const b1Ref = useRef<HTMLDivElement>(null)
   const b2Ref = useRef<HTMLDivElement>(null)
   const b3Ref = useRef<HTMLDivElement>(null)
@@ -46,13 +47,14 @@ const GooeyCursor: React.FC = () => {
         redDotRef.current.style.top = `${y}px`
       }
 
-      // Position red circle to follow red dot with slight delay (GLOBAL - always active)
+      // Position red circle to follow red dot with more delay (GLOBAL - always active)
       if (redCircleRef.current) {
         const currentLeft = parseFloat(redCircleRef.current.style.left) || x
         const currentTop = parseFloat(redCircleRef.current.style.top) || y
         
-        const deltaX = (x - currentLeft) * 0.15
-        const deltaY = (y - currentTop) * 0.15
+        // Reduced speed to 50% for ultra smooth fluid animation (was 0.08, now 0.032)
+        const deltaX = (x - currentLeft) * 0.032
+        const deltaY = (y - currentTop) * 0.032
         
         const newX = currentLeft + deltaX
         const newY = currentTop + deltaY
@@ -85,6 +87,36 @@ const GooeyCursor: React.FC = () => {
           const newY = currentY + deltaY
           
           bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+        }
+
+        // Center bubble 3 - follows bc1 with same delay as red circle follows red dot
+        if (bc3Ref.current && bc1Ref.current) {
+          // Extract bc1 position from its transform
+          const bc1Transform = bc1Ref.current.style.transform
+          const bc1X = bc1Transform.includes('translate3d') 
+            ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : x
+          const bc1Y = bc1Transform.includes('translate3d')
+            ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
+            : y
+          
+          // Get current bc3 position
+          const currentTransform = bc3Ref.current.style.transform
+          const currentX = currentTransform.includes('translate3d') 
+            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+            : bc1X
+          const currentY = currentTransform.includes('translate3d')
+            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+            : bc1Y
+          
+                     // Follow bc1 with same delay factor as red circle follows red dot (0.032)
+           const deltaX = (bc1X - currentX) * 0.032
+           const deltaY = (bc1Y - currentY) * 0.032
+          
+          const newX = currentX + deltaX
+          const newY = currentY + deltaY
+          
+          bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
 
         if (b1Ref.current) {
@@ -259,6 +291,11 @@ const GooeyCursor: React.FC = () => {
             <div 
               ref={bc2Ref}
               className="bc2" 
+              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
+            ></div>
+            <div 
+              ref={bc3Ref}
+              className="bc3" 
               style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
             ></div>
             {/* Large decorative bubbles */}

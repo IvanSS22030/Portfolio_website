@@ -96,7 +96,8 @@
 
 /* Center bubbles - create the main fluid animation */
 .mk-gooery .bc1,
-.mk-gooery .bc2 {
+.mk-gooery .bc2,
+.mk-gooery .bc3 {
   position: absolute;
   will-change: transform;
   border-radius: 50%;
@@ -117,9 +118,15 @@
   height: calc(80vw / var(--circleDividant));
 }
 
+.mk-gooery .bc3 {
+  width: calc(80vw / var(--circleDividant));
+  height: calc(80vw / var(--circleDividant));
+}
+
 /* Light spots on center bubbles */
 .mk-gooery .bc1:after,
-.mk-gooery .bc2:after {
+.mk-gooery .bc2:after,
+.mk-gooery .bc3:after {
   content: "";
   position: absolute;
   top: calc(20vw / var(--circleDividant));
