@@ -386,93 +386,29 @@ const Hero: React.FC = () => {
   }, [theme]);
 
   const handleAnimationStart = () => {
+    // This function is only for the professional theme, but we add an explicit check for clarity.
     if (theme === 'professional') {
-      // Create audio context and gain node
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const gainNode = audioContext.createGain();
-      gainNode.connect(audioContext.destination);
-      gainNode.gain.value = 0.2;
+      // All audio-related code has been deleted from this block.
+      // We only manage the animation timing.
 
-      // Create and set up audio element with the correct audio file
-      const audio = new Audio(typingSound); // Using typewriter-typing.mp3
-      audio.volume = 0.2;
-      
-      let activeAudioElements: HTMLAudioElement[] = [];
-      let isTypingDone = false;
-      
-      const stopAllAudio = () => {
-        isTypingDone = true;
-        // Stop all active audio elements immediately
-        activeAudioElements.forEach(audioElement => {
-          audioElement.pause();
-          audioElement.currentTime = 0;
-          audioElement.remove();
-        });
-        activeAudioElements = [];
-
+      const stopAnimation = () => {
         if (typingIntervalRef.current) {
           window.clearInterval(typingIntervalRef.current);
           typingIntervalRef.current = null;
         }
-
-        audioContext.close().catch(console.error);
       };
 
-      const playTypewriterSound = () => {
-        if (isTypingDone) return;
-
-        const audioClone = audio.cloneNode() as HTMLAudioElement;
-        audioClone.volume = 0.2;
-        activeAudioElements.push(audioClone);
-        
-        const playPromise = audioClone.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              audioClone.addEventListener('ended', () => {
-                if (isTypingDone || !activeAudioElements.includes(audioClone)) return;
-                const index = activeAudioElements.indexOf(audioClone);
-                if (index > -1) {
-                  activeAudioElements.splice(index, 1);
-                  audioClone.remove();
-                }
-              });
-            })
-            .catch(error => {
-              console.warn('Audio playback failed:', error);
-              const index = activeAudioElements.indexOf(audioClone);
-              if (index > -1) {
-                activeAudioElements.splice(index, 1);
-                audioClone.remove();
-              }
-            });
-        }
-      };
-
-      // Start playing sounds just before the animation starts
-      setTimeout(() => {
-        if (!isTypingDone) {
-          playTypewriterSound();
-          typingIntervalRef.current = window.setInterval(() => {
-            if (!isTypingDone) {
-              playTypewriterSound();
-            }
-          }, 100);
-        }
-      }, 1400);
-
-      // Calculate animation duration including delay
+      // Set a timeout to clean up any intervals after the animation is guaranteed to be over.
       const animationDuration = 3500; // 3.5s typing animation
       const totalDuration = animationDuration + 1500; // Include initial delay
 
-      // Stop all audio exactly when animation ends
       animationEndTimeoutRef.current = window.setTimeout(() => {
-        stopAllAudio();
+        stopAnimation();
       }, totalDuration);
 
       // Cleanup function
       return () => {
-        stopAllAudio();
+        stopAnimation();
       };
     }
   };
