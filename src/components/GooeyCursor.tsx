@@ -18,21 +18,58 @@ const GooeyCursor: React.FC = () => {
   // State to track if we should show gooey bubbles (only when scroll is 0)
   const [showGoeyBubbles, setShowGoeyBubbles] = useState(true)
   
+  // Ref to track the hero section for constraint bounds
+  const heroSectionRef = useRef<HTMLElement | null>(null)
+  
   // Position history buffer for bc3 delayed following (1 second delay)
   const positionHistoryRef = useRef<Array<{x: number, y: number, timestamp: number}>>([])
   const DELAY_TIME =5 // 1 second in milliseconds
+  
+  // Helper function to constrain positions within hero section (for professional theme)
+  const constrainPosition = (x: number, y: number) => {
+    const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
+    
+    if (!isProfessionalTheme || !heroSectionRef.current) {
+      return { x, y } // No constraints for personal theme or if hero section not found
+    }
+    
+    const heroRect = heroSectionRef.current.getBoundingClientRect()
+    
+    // Use viewport coordinates directly (both mouse and getBoundingClientRect use same system)
+    // Add margin to keep bubbles clearly within bounds
+    const margin = 50
+    const heroTop = heroRect.top + margin
+    const heroBottom = heroRect.bottom - margin
+    const heroLeft = heroRect.left + margin
+    const heroRight = heroRect.right - margin
+    
+    // Allow full horizontal movement, strictly constrain vertical to hero section
+    const constrainedX = x // Full horizontal freedom - bubbles follow cursor left/right
+    const constrainedY = Math.max(heroTop, Math.min(y, heroBottom)) // Strict vertical constraint
+    
+    return { x: constrainedX, y: constrainedY }
+  }
 
   useEffect(() => {
+    // Find the hero section for constraint bounds
+    heroSectionRef.current = document.getElementById('home')
+    
     const handleScroll = () => {
       const scrollY = window.scrollY
       
-      // Only show gooey bubbles when there's absolutely no scroll
+      // Always show gooey bubbles in professional theme, only hide on scroll for personal theme
       const shouldShowBubbles = scrollY === 0
       setShowGoeyBubbles(shouldShowBubbles)
       
-      // Immediately hide the container when scrolling
+      // For professional theme, always keep bubbles visible but constrained to hero area
+      // For personal theme, hide when scrolling
       if (goeryContainerRef.current) {
-        goeryContainerRef.current.style.display = shouldShowBubbles ? 'block' : 'none'
+        const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
+        if (isProfessionalTheme) {
+          goeryContainerRef.current.style.display = 'block'
+        } else {
+          goeryContainerRef.current.style.display = shouldShowBubbles ? 'block' : 'none'
+        }
       }
     }
 
@@ -67,8 +104,11 @@ const GooeyCursor: React.FC = () => {
         redCircleRef.current.style.top = `${newY}px`
       }
 
-      // Animate gooey bubbles ONLY when we haven't scrolled at all
-      if (showGoeyBubbles && window.scrollY === 0) {
+      // Animate gooey bubbles - always for professional theme, only at scroll=0 for personal theme
+      const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
+      const shouldAnimateBubbles = isProfessionalTheme || (showGoeyBubbles && window.scrollY === 0)
+      
+      if (shouldAnimateBubbles) {
         // Center bubble 1 - follows mouse with specified speed
         if (bc1Ref.current) {
           const currentTransform = bc1Ref.current.style.transform
@@ -79,12 +119,17 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : y
           
-          // Original bubble: 0.025 speed
+          // Original bubble: 0.025 speed with constraints
           const deltaX = (x - currentX) * 0.025
           const deltaY = (y - currentY) * 0.025
           
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
+          const targetX = currentX + deltaX
+          const targetY = currentY + deltaY
+          
+          // Apply constraints for professional theme
+          const constrainedPos = constrainPosition(targetX, targetY)
+          const newX = constrainedPos.x
+          const newY = constrainedPos.y
           
           bc1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
           
@@ -115,8 +160,13 @@ const GooeyCursor: React.FC = () => {
           const deltaX = (x - currentX) * 0.15 // Moderate lag for fluid effect
           const deltaY = (y - currentY) * 0.15
           
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
+          const targetX = currentX + deltaX
+          const targetY = currentY + deltaY
+          
+          // Apply constraints for professional theme
+          const constrainedPos = constrainPosition(targetX, targetY)
+          const newX = constrainedPos.x
+          const newY = constrainedPos.y
           
           bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
@@ -144,8 +194,13 @@ const GooeyCursor: React.FC = () => {
             const deltaX = (targetPosition.x - currentX) * 0.08
             const deltaY = (targetPosition.y - currentY) * 0.08
             
-            const newX = currentX + deltaX
-            const newY = currentY + deltaY
+            const targetX = currentX + deltaX
+            const targetY = currentY + deltaY
+            
+            // Apply constraints for professional theme
+            const constrainedPos = constrainPosition(targetX, targetY)
+            const newX = constrainedPos.x
+            const newY = constrainedPos.y
             
             bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
           } else {
@@ -169,8 +224,13 @@ const GooeyCursor: React.FC = () => {
             const deltaX = (bc1X - currentX) * 0.015
             const deltaY = (bc1Y - currentY) * 0.015
             
-            const newX = currentX + deltaX
-            const newY = currentY + deltaY
+            const targetX = currentX + deltaX
+            const targetY = currentY + deltaY
+            
+            // Apply constraints for professional theme
+            const constrainedPos = constrainPosition(targetX, targetY)
+            const newX = constrainedPos.x
+            const newY = constrainedPos.y
             
             bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
           }
@@ -189,8 +249,13 @@ const GooeyCursor: React.FC = () => {
           const deltaX = (x - currentX) * 0.10
           const deltaY = (y - currentY) * 0.10
           
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
+          const targetX = currentX + deltaX
+          const targetY = currentY + deltaY
+          
+          // Apply constraints for professional theme
+          const constrainedPos = constrainPosition(targetX, targetY)
+          const newX = constrainedPos.x
+          const newY = constrainedPos.y
           
           b1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
@@ -205,12 +270,17 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : y
           
-          // Outside yellow bubble: 0.015 speed
+          // Outside yellow bubble: 0.015 speed with constraints
           const deltaX = (x - currentX) * 0.0040
           const deltaY = (y - currentY) * 0.0040
           
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
+          const targetX = currentX + deltaX
+          const targetY = currentY + deltaY
+          
+          // Apply constraints for professional theme
+          const constrainedPos = constrainPosition(targetX, targetY)
+          const newX = constrainedPos.x
+          const newY = constrainedPos.y
           
           b2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
@@ -228,8 +298,13 @@ const GooeyCursor: React.FC = () => {
           const deltaX = (x - currentX) * 0.0020
           const deltaY = (y - currentY) * 0.0020
           
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
+          const targetX = currentX + deltaX
+          const targetY = currentY + deltaY
+          
+          // Apply constraints for professional theme
+          const constrainedPos = constrainPosition(targetX, targetY)
+          const newX = constrainedPos.x
+          const newY = constrainedPos.y
           
           b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
