@@ -17,6 +17,10 @@ const GooeyCursor: React.FC = () => {
   
   // State to track if we should show gooey bubbles (only when scroll is 0)
   const [showGoeyBubbles, setShowGoeyBubbles] = useState(true)
+  
+  // Position history buffer for bc3 delayed following (1 second delay)
+  const positionHistoryRef = useRef<Array<{x: number, y: number, timestamp: number}>>([])
+  const DELAY_TIME =5 // 1 second in milliseconds
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,6 +87,19 @@ const GooeyCursor: React.FC = () => {
           const newY = currentY + deltaY
           
           bc1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+          
+          // Save bc1 position to history for bc3 delayed following
+          const currentTime = Date.now()
+          positionHistoryRef.current.push({
+            x: newX,
+            y: newY,
+            timestamp: currentTime
+          })
+          
+          // Clean old positions (older than delay time + 500ms buffer)
+          positionHistoryRef.current = positionHistoryRef.current.filter(
+            pos => currentTime - pos.timestamp <= DELAY_TIME + 150
+          )
         }
 
         // Center bubble 2 - follows bc1 with slight delay (keep original behavior)
@@ -104,38 +121,58 @@ const GooeyCursor: React.FC = () => {
           bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
         }
 
-        // Center bubble 3 - clone of the original with specified speed
-        if (bc3Ref.current && bc1Ref.current) {
-          // Extract bc1 position from its transform
-          const bc1Transform = bc1Ref.current.style.transform
-          const bc1X = bc1Transform.includes('translate3d') 
-            ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const bc1Y = bc1Transform.includes('translate3d')
-            ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+        // Center bubble 3 - clone with 1 second delay following bc1's old trajectory
+        if (bc3Ref.current) {
+          const currentTime = Date.now()
           
-          // Get current bc3 position
-          const currentTransform = bc3Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : bc1X
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : bc1Y
+          // Find the position from 1 second ago
+          const targetPosition = positionHistoryRef.current.find(
+            pos => currentTime - pos.timestamp >= DELAY_TIME
+          )
           
-          // Clone bubble: temporarily increased to 0.015 for visibility testing
-          const deltaX = (bc1X - currentX) * 0.015
-          const deltaY = (bc1Y - currentY) * 0.015
-          
-          const newX = currentX + deltaX
-          const newY = currentY + deltaY
-          
-          bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-          
-          // Debug: log to verify bc3 is moving
-          if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
-            console.log('BC3 Clone moving:', { newX, newY, deltaX, deltaY })
+          if (targetPosition) {
+            // Get current bc3 position
+            const currentTransform = bc3Ref.current.style.transform
+            const currentX = currentTransform.includes('translate3d') 
+              ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+              : targetPosition.x
+            const currentY = currentTransform.includes('translate3d')
+              ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+              : targetPosition.y
+            
+            // bc3 follows the 1-second-old position of bc1
+            const deltaX = (targetPosition.x - currentX) * 0.08
+            const deltaY = (targetPosition.y - currentY) * 0.08
+            
+            const newX = currentX + deltaX
+            const newY = currentY + deltaY
+            
+            bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
+          } else {
+            // If no history yet, follow bc1 directly (fallback for first second)
+            const bc1Transform = bc1Ref.current?.style.transform || ''
+            const bc1X = bc1Transform.includes('translate3d') 
+              ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
+              : x
+            const bc1Y = bc1Transform.includes('translate3d')
+              ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
+              : y
+            
+            const currentTransform = bc3Ref.current.style.transform
+            const currentX = currentTransform.includes('translate3d') 
+              ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
+              : bc1X
+            const currentY = currentTransform.includes('translate3d')
+              ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
+              : bc1Y
+            
+            const deltaX = (bc1X - currentX) * 0.015
+            const deltaY = (bc1Y - currentY) * 0.015
+            
+            const newX = currentX + deltaX
+            const newY = currentY + deltaY
+            
+            bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
           }
         }
 
@@ -149,8 +186,8 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : y
           
-          const deltaX = (x - currentX) * 0.12
-          const deltaY = (y - currentY) * 0.12
+          const deltaX = (x - currentX) * 0.10
+          const deltaY = (y - currentY) * 0.10
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
@@ -169,8 +206,8 @@ const GooeyCursor: React.FC = () => {
             : y
           
           // Outside yellow bubble: 0.015 speed
-          const deltaX = (x - currentX) * 0.010
-          const deltaY = (y - currentY) * 0.010
+          const deltaX = (x - currentX) * 0.0040
+          const deltaY = (y - currentY) * 0.0040
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
@@ -188,8 +225,8 @@ const GooeyCursor: React.FC = () => {
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
             : y
           
-          const deltaX = (x - currentX) * 0.04
-          const deltaY = (y - currentY) * 0.04
+          const deltaX = (x - currentX) * 0.0020
+          const deltaY = (y - currentY) * 0.0020
           
           const newX = currentX + deltaX
           const newY = currentY + deltaY
