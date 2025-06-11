@@ -68,30 +68,25 @@
 
 /* Gooey Cursor - Absolutely Restricted to Hero Section */
 .mk-gooery {
-  position: fixed;
+  position: absolute; /* Changed from fixed to absolute */
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh; /* Exactly one viewport height */
+  width: 100%;
+  height: 100%; /* Changed from 100vh to 100% */
   overflow: hidden; /* Critical: clips everything outside */
-  z-index: 1;
+  z-index: 1; /* Sits behind hero content but above hero background */
   pointer-events: none;
 }
 
 .mk-gooery .hooks-main {
-  overflow: hidden; /* Double safety clipping */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%; /* Use parent container height */
-  position: relative; /* Changed from fixed to relative */
+  position: absolute; /* Positions relative to .mk-gooery */
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 1; /* Same as parent */
   pointer-events: none;
   transition: opacity 0.5s ease-out;
-  clip-path: inset(0 0 0 0); /* Ensure nothing bleeds outside the container */
+  width: 100%;
+  height: 100%;
 }
 
 /* Center bubbles - create the main fluid animation */

@@ -33,19 +33,29 @@ const GooeyCursor: React.FC = () => {
       return { x, y } // No constraints for personal theme or if hero section not found
     }
     
+    // Con el nuevo posicionamiento absoluto, las coordenadas del ratón (e.clientY)
+    // deben ajustarse por el scroll de la página para que coincidan con la posición
+    // del contenedor de las burbujas.
+    const scrollY = window.scrollY
+    const adjustedY = y + scrollY
+
     const heroRect = heroSectionRef.current.getBoundingClientRect()
     
-    // Use viewport coordinates directly (both mouse and getBoundingClientRect use same system)
-    // Add margin to keep bubbles clearly within bounds
-    const margin = 50
-    const heroTop = heroRect.top + margin
-    const heroBottom = heroRect.bottom - margin
-    const heroLeft = heroRect.left + margin
-    const heroRight = heroRect.right - margin
+    // Los límites ahora son relativos al propio contenedor de la sección hero,
+    // que es de 100vh de alto.
+    const marginTop = 50
+    const marginBottom = 0
+    const marginSides = 50
     
-    // Allow full horizontal movement, strictly constrain vertical to hero section
-    const constrainedX = x // Full horizontal freedom - bubbles follow cursor left/right
-    const constrainedY = Math.max(heroTop, Math.min(y, heroBottom)) // Strict vertical constraint
+    const heroTop = marginTop
+    // La pared blanca es la altura de la sección menos el margen inferior.
+    const heroBottom = heroRect.height - marginBottom
+    const heroLeft = marginSides
+    const heroRight = heroRect.width - marginSides
+    
+    const constrainedX = Math.max(heroLeft, Math.min(x, heroRight))
+    // Usamos el 'adjustedY' que considera el scroll.
+    const constrainedY = Math.max(heroTop, Math.min(adjustedY, heroBottom))
     
     return { x: constrainedX, y: constrainedY }
   }
@@ -75,6 +85,12 @@ const GooeyCursor: React.FC = () => {
 
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e
+
+      // Para el nuevo posicionamiento absoluto, necesitamos la posición del ratón
+      // relativa al elemento #home, no a la ventana.
+      const heroRect = heroSectionRef.current?.getBoundingClientRect()
+      const relativeX = x - (heroRect?.left || 0)
+      const relativeY = y - (heroRect?.top || 0)
 
       // Position cursor lines at mouse position (GLOBAL)
       if (cursorLineBoxRef.current) {
@@ -114,14 +130,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = bc1Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
+            : relativeX
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+            : relativeY
           
           // Original bubble: 0.025 speed with constraints
-          const deltaX = (x - currentX) * 0.025
-          const deltaY = (y - currentY) * 0.025
+          const deltaX = (relativeX - currentX) * 0.025
+          const deltaY = (relativeY - currentY) * 0.025
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -152,13 +168,13 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = bc2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
+            : relativeX
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+            : relativeY
           
-          const deltaX = (x - currentX) * 0.15 // Moderate lag for fluid effect
-          const deltaY = (y - currentY) * 0.15
+          const deltaX = (relativeX - currentX) * 0.15 // Moderate lag for fluid effect
+          const deltaY = (relativeY - currentY) * 0.15
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -208,10 +224,10 @@ const GooeyCursor: React.FC = () => {
             const bc1Transform = bc1Ref.current?.style.transform || ''
             const bc1X = bc1Transform.includes('translate3d') 
               ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
-              : x
+              : relativeX
             const bc1Y = bc1Transform.includes('translate3d')
               ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
-              : y
+              : relativeY
             
             const currentTransform = bc3Ref.current.style.transform
             const currentX = currentTransform.includes('translate3d') 
@@ -241,13 +257,14 @@ const GooeyCursor: React.FC = () => {
           const currentTransform = b1Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
+            : relativeX
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+            : relativeY
           
-          const deltaX = (x - currentX) * 0.10
-          const deltaY = (y - currentY) * 0.10
+          // Fast bubble: 0.08 speed with constraints
+          const deltaX = (relativeX - currentX) * 0.08
+          const deltaY = (relativeY - currentY) * 0.08
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -261,18 +278,18 @@ const GooeyCursor: React.FC = () => {
         }
 
         if (b2Ref.current) {
-          // Outside yellow bubble with specified speed
+          // Medium speed large bubble - follows mouse with more delay
           const currentTransform = b2Ref.current.style.transform
           const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
+            : relativeX
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+            : relativeY
           
-          // Outside yellow bubble: 0.015 speed with constraints
-          const deltaX = (x - currentX) * 0.0040
-          const deltaY = (y - currentY) * 0.0040
+          // Medium speed bubble: 0.04 speed with constraints
+          const deltaX = (relativeX - currentX) * 0.04
+          const deltaY = (relativeY - currentY) * 0.04
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
@@ -286,17 +303,18 @@ const GooeyCursor: React.FC = () => {
         }
 
         if (b3Ref.current) {
-          // Slowest lag bubble
+          // Slowest large bubble - very delayed follow
           const currentTransform = b3Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d')
+          const currentX = currentTransform.includes('translate3d') 
             ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
+            : relativeX
           const currentY = currentTransform.includes('translate3d')
             ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
+            : relativeY
           
-          const deltaX = (x - currentX) * 0.0020
-          const deltaY = (y - currentY) * 0.0020
+          // Slow bubble: 0.02 speed with constraints
+          const deltaX = (relativeX - currentX) * 0.02
+          const deltaY = (relativeY - currentY) * 0.02
           
           const targetX = currentX + deltaX
           const targetY = currentY + deltaY
