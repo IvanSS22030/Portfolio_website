@@ -3,10 +3,10 @@ import { GameItem } from '../types';
 export const favoriteGames: GameItem[] = [
   {
     id: 1,
-    title: "Castlevania: Symphony of the Night",
-    image: "https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    video: "https://www.youtube.com/embed/UrRUFQF_O7c",
-    description: "The most iconic Castlevania game that defined the Metroidvania genre."
+    title: "Resident Evil 4",
+    image: "/src/assets/images/Game assets pictures/Resident evil.jpg",
+    video: "/src/assets/videos/Resident Evil Game Showcase.mp4",
+    description: "The most iconic Resident Evil game that defined the action/horror genre."
   },
   {
     id: 2,
