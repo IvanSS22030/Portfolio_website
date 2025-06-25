@@ -224,7 +224,7 @@ My expertise spans web scraping, automation, and building robust data pipelines,
 I value clarity, creativity, and continuous growth, and I enjoy collaborating with people who share my passion for driving impact through innovative, efficient solutions.
               </p>
               <p className={`text-gray-600 mb-6 leading-relaxed ${isInView ? 'animate-[fadeInUp_0.6s_ease-in-out_1.1s_forwards]' : 'opacity-0'}`}>
-                When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or sharing my knowledge through technical writing and mentoring.
+              When I’m not deep in code or data pipelines, I’m probably chasing down random facts, testing a new tool, or thinking about my next personal project (which may or may not ever leave the idea stage).
               </p>
               
               {/* Enhanced buttons */}
@@ -285,7 +285,7 @@ I value clarity, creativity, and continuous growth, and I enjoy collaborating wi
           <div className="md:w-1/2">
             <h3 className="text-2xl font-semibold text-amber-400 mb-4 font-serif">Master of the Digital Realm</h3>
             <p className="text-amber-200 mb-6 leading-relaxed">
-              From the shadows of binary wastelands to the heights of algorithmic castles, I have journeyed through the digital realm mastering arcane languages and conquering complex systems. My powers extend beyond mere mortal coding—I bend both front-end and back-end to my will.
+              From the shadows of binary wastelands to the heights of algorithmic castles, I have journeyed through the digital realm mastering arcane languages and conquering complex systems. My powers extend beyond mere mortal coding—I bend both Data and back-end to my will.
             </p>
             <p className="text-amber-200 mb-6 leading-relaxed">
               When not slaying bugs or summoning new applications from the void, I commune with fellow wizards, share mystical knowledge, and collect rare artifacts of gaming lore.

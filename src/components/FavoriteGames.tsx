@@ -14,7 +14,7 @@ const FavoriteGames: React.FC = () => {
   return (
     <section id="games" className="py-20 bg-black bg-opacity-95">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-amber-500 mb-12 font-serif">Legendary Games</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-amber-500 mb-12 font-serif">Legendary Games I love </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {favoriteGames.map((game) => (
             <div

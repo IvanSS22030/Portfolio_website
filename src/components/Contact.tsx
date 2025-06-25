@@ -21,7 +21,7 @@ const Contact: React.FC = () => {
                 <Phone className="w-5 h-5 text-blue-600 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-gray-800">Phone</h4>
-                  <p className="text-gray-600">+1 (123) 456-7890</p>
+                  <p className="text-gray-600">+1 (849) 276-2030</p>
                 </div>
               </div>
               
@@ -104,7 +104,7 @@ const Contact: React.FC = () => {
                 <Phone className="w-5 h-5 text-amber-500 mt-1 mr-4" />
                 <div>
                   <h4 className="text-lg font-medium text-amber-400 font-serif">Crystal Ball</h4>
-                  <p className="text-amber-200">+1 (123) 456-7890</p>
+                  <p className="text-amber-200">+1 (849) 276-2030</p>
                 </div>
               </div>
               

@@ -19,7 +19,7 @@ export const favoriteGames: GameItem[] = [
     id: 3,
     title: "Super Mario Sunshine",
     image: "/src/assets/images/Game assets pictures/Super Mario Sunshine.jpg",
-    video: "https://www.youtube.com/embed/hA-OCbZ4bps",
+    video: "/src/assets/videos/mario sunshine Video.mp4",
     description: "A modern reboot of the series with epic storytelling and visuals."
   },
   {
