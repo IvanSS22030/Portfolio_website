@@ -33,14 +33,14 @@ const FavoriteGames: React.FC = () => {
                 src={game.image}
                 alt={game.title}
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-                style={{ 
+                style={{
                   opacity: activeGame === game.id ? 0 : 1,
-                  objectPosition: game.title === "Resident Evil 4" ? "center 10%" : "center center"
+                  objectPosition: game.title === "Resident Evil 4" ? "center top" : "center center"
                 }}
               />
               
               {/* Hover Video */}
-              {activeGame === game.id && (
+              {activeGame === game.id && game.video && (
                 <div className="absolute inset-0 w-full h-full bg-black z-10">
                   {isYouTubeVideo(game.video) ? (
                     <iframe
@@ -52,6 +52,7 @@ const FavoriteGames: React.FC = () => {
                     ></iframe>
                   ) : (
                     <video
+                      key={game.id}
                       className="w-full h-full object-cover"
                       autoPlay
                       muted
