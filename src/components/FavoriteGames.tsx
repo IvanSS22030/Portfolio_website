@@ -35,20 +35,29 @@ const FavoriteGames: React.FC = () => {
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
                 style={{
                   opacity: activeGame === game.id ? 0 : 1,
-                  objectPosition: game.title === "Resident Evil 4" ? "center top" : "center center"
+                  objectPosition: game.title === "Resident Evil 4" ? "center 30%" : "center center"
                 }}
               />
               
-              {/* Hover Video */}
-              {activeGame === game.id && game.video && (
-                <div className="absolute inset-0 w-full h-full bg-black z-10">
+              {/* Video Layer (kept mounted to preserve playback position) */}
+              {game.video && (
+                <div
+                  className={`absolute inset-0 w-full h-full bg-black z-10 transition-opacity duration-300 ${
+                    activeGame === game.id ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  aria-hidden={activeGame === game.id ? 'false' : 'true'}
+                >
                   {isYouTubeVideo(game.video) ? (
                     <iframe
                       title={game.title}
-                      src={`${game.video}?autoplay=1&mute=1&controls=0&loop=1`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      src={`${game.video}${game.video.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${encodeURIComponent(
+                        game.video.split('/').pop() || ''
+                      )}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0&playsinline=1`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      loading="lazy"
                       allowFullScreen
-                      className="w-full h-full"
+                      className="w-full h-full pointer-events-none"
                     ></iframe>
                   ) : (
                     <video
@@ -63,6 +72,11 @@ const FavoriteGames: React.FC = () => {
                       Your browser does not support the video tag.
                     </video>
                   )}
+                  {/* Mask top area to visually hide YouTube's top bar */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-black/80"
+                  />
                 </div>
               )}
               

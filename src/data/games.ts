@@ -5,7 +5,7 @@ export const favoriteGames: GameItem[] = [
     id: 1,
     title: "Resident Evil 4",
     image: "/images/games/Resident evil.jpg",
-    video: "/videos/Resident Evil Game Showcase.mp4",
+    video: "https://www.youtube.com/embed/lbpT7y_5f0k",
     description: "The most iconic Resident Evil game that defined the action/horror genre."
   },
   {
@@ -19,7 +19,7 @@ export const favoriteGames: GameItem[] = [
     id: 3,
     title: "Super Mario Sunshine",
     image: "/images/games/Mario Sunshine.jpg",
-    video: "/videos/Mario Sunshine Video.mp4",
+    video: "https://www.youtube.com/embed/8vHdUidhUXs",
     description: "A modern reboot of the series with epic storytelling and visuals."
   },
   {
