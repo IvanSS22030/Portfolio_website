@@ -36,3 +36,9 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Videos grandes (>100 MB, límite de GitHub); ahora se muestran desde YouTube
+public/videos/Mario Sunshine Video.mp4
+public/videos/Resident Evil Game Showcase.mp4
+src/assets/videos/Mario Sunshine Video.mp4
+src/assets/videos/Resident Evil Game Showcase.mp4
