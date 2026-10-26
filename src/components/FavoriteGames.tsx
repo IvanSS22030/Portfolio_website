@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import type { GameItem } from '../types';
 import { favoriteGames } from '../data/games';
 import { useTheme } from '../context/ThemeContext';
 
 const FavoriteGames: React.FC = () => {
   const { theme } = useTheme();
   const [activeGame, setActiveGame] = useState<number | null>(null);
+  const iframeRefs = useRef<Record<number, HTMLIFrameElement | null>>({});
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
+  const [showAudioPrompt, setShowAudioPrompt] = useState<boolean>(false);
 
   // Only render in personal mode
   if (theme !== 'personal') {
@@ -16,6 +21,73 @@ const FavoriteGames: React.FC = () => {
     return videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
   };
 
+  const sendYouTubeCommand = (
+    iframe: HTMLIFrameElement | null,
+    func: string,
+    args: unknown[] = []
+  ) => {
+    if (!iframe?.contentWindow) return;
+    iframe.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func, args }),
+      '*'
+    );
+  };
+
+  // One-time user gesture enables audio for all previews
+  useEffect(() => {
+    const stored = localStorage.getItem('audio-enabled');
+    const initialEnabled = stored === 'true';
+    setAudioEnabled(initialEnabled);
+    setShowAudioPrompt(!initialEnabled);
+    const enableByGesture = () => {
+      enableAudio();
+    };
+    window.addEventListener('pointerdown', enableByGesture, { once: true });
+    window.addEventListener('keydown', enableByGesture, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', enableByGesture);
+      window.removeEventListener('keydown', enableByGesture);
+    };
+  }, []);
+
+  const enableAudio = () => {
+    setAudioEnabled(true);
+    setShowAudioPrompt(false);
+    localStorage.setItem('audio-enabled', 'true');
+  };
+
+  const handleMouseEnter = (game: GameItem) => {
+    setActiveGame(game.id);
+    if (isYouTubeVideo(game.video)) {
+      const iframe = iframeRefs.current[game.id] ?? null;
+      sendYouTubeCommand(iframe, 'playVideo');
+      // Attempt to unmute; browsers may block until user gesture
+      if (audioEnabled) {
+        sendYouTubeCommand(iframe, 'unMute');
+        sendYouTubeCommand(iframe, 'setVolume', [100]);
+      }
+    } else {
+      const v = videoRefs.current[game.id];
+      if (v) {
+        v.muted = audioEnabled ? false : true;
+        v.play().catch(() => {});
+      }
+    }
+  };
+
+  const handleMouseLeave = (game: GameItem) => {
+    setActiveGame(null);
+    if (isYouTubeVideo(game.video)) {
+      const iframe = iframeRefs.current[game.id] ?? null;
+      sendYouTubeCommand(iframe, 'mute');
+    } else {
+      const v = videoRefs.current[game.id];
+      if (v) {
+        v.muted = true;
+      }
+    }
+  };
+
   return (
     <section id="games" className="py-20 bg-black bg-opacity-95">
       <div className="container mx-auto px-4">
@@ -25,8 +97,8 @@ const FavoriteGames: React.FC = () => {
             <div
               key={game.id}
               className="relative overflow-hidden rounded-lg border border-amber-900 shadow-lg h-80 group cursor-pointer"
-              onMouseEnter={() => setActiveGame(game.id)}
-              onMouseLeave={() => setActiveGame(null)}
+              onMouseEnter={() => handleMouseEnter(game)}
+              onMouseLeave={() => handleMouseLeave(game)}
             >
               {/* Game Image */}
               <img
@@ -50,14 +122,18 @@ const FavoriteGames: React.FC = () => {
                   {isYouTubeVideo(game.video) ? (
                     <iframe
                       title={game.title}
+                      id={`yt-player-${game.id}`}
                       src={`${game.video}${game.video.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${encodeURIComponent(
                         game.video.split('/').pop() || ''
-                      )}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0&playsinline=1`}
+                      )}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0&playsinline=1&enablejsapi=1`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       referrerPolicy="strict-origin-when-cross-origin"
                       loading="lazy"
                       allowFullScreen
-                      className="w-full h-full pointer-events-none"
+                      className="w-full h-full pointer-events-none transform-gpu origin-top scale-[1.42] -translate-y-12"
+                      ref={(el) => {
+                        iframeRefs.current[game.id] = el;
+                      }}
                     ></iframe>
                   ) : (
                     <video
@@ -67,16 +143,15 @@ const FavoriteGames: React.FC = () => {
                       muted
                       loop
                       playsInline
+                      ref={(el) => {
+                        videoRefs.current[game.id] = el;
+                      }}
                     >
                       <source src={game.video} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   )}
-                  {/* Mask top area to visually hide YouTube's top bar */}
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-black/80"
-                  />
+                  {/* No controls/buttons; audio handled automatically on hover */}
                 </div>
               )}
               
@@ -94,6 +169,27 @@ const FavoriteGames: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* One-time audio prompt */}
+      {showAudioPrompt && (
+        <div
+          role="dialog"
+          aria-live="polite"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-md border border-amber-700 bg-black/80 px-4 py-3 text-amber-100 shadow-lg backdrop-blur-sm"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm">Enable sound for video previews</span>
+            <button
+              type="button"
+              onClick={enableAudio}
+              className="rounded bg-amber-700 px-3 py-1 text-sm text-black hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              aria-label="Enable sound for previews"
+            >
+              Enable sound
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
