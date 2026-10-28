@@ -30,9 +30,9 @@
 }
 
 .theme-personal body {
-  background-image: url('https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+  background-image: url('/images/castlevania-castle.jpg');
   background-size: cover;
-  background-position: center;
+  background-position: top right;
   background-attachment: fixed;
   background-repeat: no-repeat;
 }

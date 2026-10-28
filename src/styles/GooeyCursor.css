@@ -5,9 +5,11 @@
   --circleDividant: 8; /* Responsive scaling factor */
 }
 
-/* Hide default cursor globally when cursor is active */
-* {
-  cursor: none !important;
+/* Hide default cursor globally when cursor is active (only on mouse/trackpad devices) */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
 }
 
 /* Cursor Lines */
@@ -205,12 +207,14 @@
 }
 
 /* Hide default cursor only when GooeyCursor is active (professional theme) */
-.cursor-none-active {
-  cursor: none !important;
-}
+@media (hover: hover) and (pointer: fine) {
+  .cursor-none-active {
+    cursor: none !important;
+  }
 
-.cursor-none-active * {
-  cursor: none !important;
+  .cursor-none-active * {
+    cursor: none !important;
+  }
 }
 
 /* Normal cursor for personal theme */

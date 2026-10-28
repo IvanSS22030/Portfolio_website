@@ -11,11 +11,6 @@ const FavoriteGames: React.FC = () => {
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const [showAudioPrompt, setShowAudioPrompt] = useState<boolean>(false);
 
-  // Only render in personal mode
-  if (theme !== 'personal') {
-    return null;
-  }
-
   // Function to determine if video is YouTube or local
   const isYouTubeVideo = (videoUrl: string) => {
     return videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
@@ -35,6 +30,7 @@ const FavoriteGames: React.FC = () => {
 
   // One-time user gesture enables audio for all previews
   useEffect(() => {
+    if (theme !== 'personal') return;
     const stored = localStorage.getItem('audio-enabled');
     const initialEnabled = stored === 'true';
     setAudioEnabled(initialEnabled);
@@ -48,7 +44,7 @@ const FavoriteGames: React.FC = () => {
       window.removeEventListener('pointerdown', enableByGesture);
       window.removeEventListener('keydown', enableByGesture);
     };
-  }, []);
+  }, [theme]);
 
   const enableAudio = () => {
     setAudioEnabled(true);
@@ -87,6 +83,11 @@ const FavoriteGames: React.FC = () => {
       }
     }
   };
+
+  // Only render in personal mode (after all hooks so the hook order never changes)
+  if (theme !== 'personal') {
+    return null;
+  }
 
   return (
     <section id="games" className="py-20 bg-black bg-opacity-95">

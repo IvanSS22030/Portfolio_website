@@ -31,6 +31,27 @@ const hackerLines = [
 
 const finalLine = 'user_decrypted: Ivan Joel Sanchez Santana';
 
+const castleImage = '/images/castlevania-castle.jpg';
+
+// The custom cursor only makes sense with a mouse or trackpad, not on touch screens
+const FINE_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
+
+const useHasFinePointer = () => {
+  const [hasFinePointer, setHasFinePointer] = useState(
+    () => window.matchMedia?.(FINE_POINTER_QUERY).matches ?? false
+  );
+
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mediaQuery = window.matchMedia(FINE_POINTER_QUERY);
+    const handleChange = () => setHasFinePointer(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  return hasFinePointer;
+};
+
 const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [typedText, setTypedText] = useState('');
@@ -182,7 +203,7 @@ const HackerIntro: React.FC = () => {
         <div className="h-8 md:h-12 flex justify-center">
           {visibleLines === hackerLines.length && (
             <span
-              className="inline-block whitespace-nowrap overflow-visible border-orange-500 pr-2 font-serif font-bold text-3xl md:text-6xl text-orange-500 text-center w-full"
+              className="inline-block whitespace-nowrap overflow-visible border-orange-500 pr-2 font-serif font-bold text-[length:clamp(1.5rem,7vw,3.75rem)] text-orange-500 text-center"
               style={{
                 borderRight: showCursor ? '4px solid #f59e42' : 'none',
               }}
@@ -298,6 +319,7 @@ const ProfessionalCursor: React.FC = () => {
 
 const Hero: React.FC = () => {
   const { theme } = useTheme();
+  const hasFinePointer = useHasFinePointer();
   const [showTyping, setShowTyping] = useState(false);
   const [key, setKey] = useState(0);
   const typingSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -418,10 +440,11 @@ const Hero: React.FC = () => {
       id="home" 
       className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none-active"
     >
-      <GooeyCursor />
+      {hasFinePointer && <GooeyCursor />}
       <style>{typingAnimation}</style>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
-        <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+        {/* Font scales with the screen so the one-line typing animation never gets clipped */}
+        <h1 className="text-[length:clamp(1.25rem,6.5vw,3.75rem)] leading-tight font-bold text-gray-800 mb-6">
           {showTyping ? (
             <span
               className="inline-block whitespace-nowrap overflow-hidden border-r-4 border-indigo-600 pr-2"
@@ -467,14 +490,30 @@ const Hero: React.FC = () => {
   );
 
   const personalHero = (
-    <section 
-      id="home" 
-      className="min-h-screen flex items-center justify-center bg-cover bg-center pt-16 relative overflow-hidden cursor-normal"
-      style={{ 
-        backgroundImage: `url('https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')` 
-      }}
+    <section
+      id="home"
+      className="min-h-screen flex items-center justify-center bg-black pt-16 relative overflow-hidden cursor-normal"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90"></div>
+      {/* Blurred copy of the castle art that fills the whole section with clouds */}
+      <img
+        src={castleImage}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover object-top scale-110 blur-2xl opacity-40"
+      />
+      {/* Castle art: full cover on mobile, anchored to the right on desktop like the Konami portal */}
+      <img
+        src={castleImage}
+        alt=""
+        aria-hidden="true"
+        className="absolute top-0 right-0 h-full w-full object-cover object-[75%_top] md:w-auto md:max-w-none"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent 0%, black 35%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 35%)',
+        }}
+      />
+      <div className="absolute inset-0 bg-black/60 md:bg-transparent md:bg-gradient-to-r md:from-black/80 md:via-black/30 md:to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black"></div>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         <HackerIntro key={key} />
         <p className="text-xl md:text-2xl text-amber-300 mb-8 max-w-2xl font-serif">

@@ -68,7 +68,7 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 flex justify-between items-center">
         <a 
           href="#home" 
-          className={`text-2xl font-bold ${currentTheme.logo}`}
+          className={`text-lg sm:text-2xl font-bold ${currentTheme.logo}`}
         >
           {theme === 'professional' ? (
             "Ivan Joel Sanchez Santana"
@@ -78,7 +78,7 @@ const Header: React.FC = () => {
         </a>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden md:flex items-center space-x-5 lg:space-x-8">
           {renderNavLinks()}
         </nav>
 
