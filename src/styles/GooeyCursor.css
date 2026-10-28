@@ -12,62 +12,6 @@
   }
 }
 
-/* Cursor Lines */
-.mk-cursor-line-box {
-  position: fixed;
-  z-index: 10003; /* Highest for precision lines */
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-}
-
-.mk-cursor-line-box .mk-cursor-line-bottom-1,
-.mk-cursor-line-box .mk-cursor-line-bottom-2,
-.mk-cursor-line-box .mk-cursor-line-right-1,
-.mk-cursor-line-box .mk-cursor-line-right-2 {
-  position: fixed;
-  transform: scale(0);
-  opacity: 0.5;
-  transition: all 0.1s linear;
-}
-
-.mk-cursor-line-box .mk-cursor-line-right-1 {
-  border-top: 1px dashed var(--themeColor4);
-  transform-origin: 0 0;
-  width: 100%;
-  height: 0;
-}
-
-.mk-cursor-line-box .mk-cursor-line-right-2 {
-  border-top: 1px dashed var(--themeColor4);
-  transform-origin: top right;
-  width: 100%;
-  height: 0;
-}
-
-.mk-cursor-line-box .mk-cursor-line-bottom-1 {
-  border-left: 1px dashed var(--themeColor4);
-  transform-origin: 0 0;
-  width: 0;
-  height: 100%;
-}
-
-.mk-cursor-line-box .mk-cursor-line-bottom-2 {
-  border-left: 1px dashed var(--themeColor4);
-  transform-origin: top right;
-  width: 0;
-  height: 100%;
-}
-
-/* Active state for lines - show on mouse click */
-.mk-cursor-line-box:active .mk-cursor-line-bottom-1,
-.mk-cursor-line-box:active .mk-cursor-line-bottom-2,
-.mk-cursor-line-box:active .mk-cursor-line-right-1,
-.mk-cursor-line-box:active .mk-cursor-line-right-2 {
-  pointer-events: none;
-  transform: scale(1);
-}
-
 /* Gooey Cursor - Absolutely Restricted to Hero Section */
 .mk-gooery {
   position: absolute; /* Changed from fixed to absolute */
@@ -86,55 +30,11 @@
   left: 0;
   z-index: 1; /* Same as parent */
   pointer-events: none;
-  transition: opacity 0.5s ease-out;
   width: 100%;
   height: 100%;
 }
 
-/* Center bubbles - create the main fluid animation */
-.mk-gooery .bc1,
-.mk-gooery .bc2,
-.mk-gooery .bc3 {
-  position: absolute;
-  will-change: transform;
-  border-radius: 50%;
-  background-color: var(--themeColor2);
-  box-shadow: 10px 10px 5px 0 rgba(0, 0, 0, 0.75);
-  opacity: 0.9;
-  transition: opacity 0.3s ease-out;
-}
-
-/* Center bubble sizes - same size for fluid interaction */
-.mk-gooery .bc1 {
-  width: calc(80vw / var(--circleDividant));
-  height: calc(80vw / var(--circleDividant));
-}
-
-.mk-gooery .bc2 {
-  width: calc(80vw / var(--circleDividant));
-  height: calc(80vw / var(--circleDividant));
-}
-
-.mk-gooery .bc3 {
-  width: calc(80vw / var(--circleDividant));
-  height: calc(80vw / var(--circleDividant));
-}
-
-/* Light spots on center bubbles */
-.mk-gooery .bc1:after,
-.mk-gooery .bc2:after,
-.mk-gooery .bc3:after {
-  content: "";
-  position: absolute;
-  top: calc(20vw / var(--circleDividant));
-  left: calc(20vw / var(--circleDividant));
-  width: calc(20vw / var(--circleDividant));
-  height: calc(20vw / var(--circleDividant));
-  border-radius: 50%;
-  background: hsla(0, 0%, 100%, 0.8);
-}
-
-/* Large decorative bubbles */
+/* Gooey bubbles */
 .mk-gooery .b1,
 .mk-gooery .b2,
 .mk-gooery .b3 {
@@ -254,7 +154,7 @@
   z-index: 9999; 
 }
 
-/* Red dot - smallest, most responsive cursor element */
+/* Red dot - follows the mouse instantly (size is set inline by GooeyCursor) */
 .mk-red-dot {
   position: fixed;
   width: 8px;
@@ -264,10 +164,10 @@
   pointer-events: none;
   z-index: 10002; /* Second highest for precision cursor */
   transform: translate(-50%, -50%);
-  transition: transform 0.05s ease-out;
+  transition: opacity 0.15s ease-in-out, height 0.2s ease-in-out, width 0.2s ease-in-out;
 }
 
-/* Red circle that follows the red dot */
+/* Red circle that trails the red dot (size is set inline by GooeyCursor) */
 .mk-red-circle {
   position: fixed;
   width: 30px;
@@ -277,7 +177,7 @@
   pointer-events: none;
   z-index: 10001; /* Third highest */
   transform: translate(-50%, -50%);
-  transition: transform 0.1s ease-out, border-color 0.3s ease-out, background-color 0.3s ease-out;
+  transition: opacity 0.15s ease-in-out, height 0.2s ease-in-out, width 0.2s ease-in-out;
   animation: pulse-circle 1.5s infinite alternate ease-in-out;
 }
 
@@ -291,17 +191,6 @@
     transform: translate(-50%, -50%) scale(1.1);
     border-color: rgba(255, 0, 0, 0.5);
   }
-}
-
-/* Click states */
-.mk-red-dot.click {
-  transform: translate(-50%, -50%) scale(0.8);
-  background-color: darkred;
-}
-
-.mk-red-circle.click {
-  transform: translate(-50%, -50%) scale(0.9);
-  border-color: darkred;
 }
 
 /* Hover active states */

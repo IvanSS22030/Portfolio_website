@@ -7,6 +7,7 @@ import Hero from './components/Hero';
 import ThemeToggle from './components/ThemeToggle';
 import ScrollToTop from './components/ScrollToTop';
 import SEO from './components/SEO';
+import ClockworkGears from './components/ClockworkGears';
 
 // Lazy load non-critical components
 const About = lazy(() => import('./components/About'));
@@ -33,6 +34,7 @@ function App() {
         <ErrorBoundaryWithTheme>
           <div className="min-h-screen">
             <SEO />
+            <ClockworkGears />
             <Header />
             <main>
               <Hero />

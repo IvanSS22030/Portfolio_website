@@ -1,0 +1,71 @@
+/*
+ * Clock Tower gears (see ClockworkGears.tsx).
+ * The gear SVG is 732x685 units; mirrored, the big gear's center sits at 63.1% / 60.6% of it.
+ * The position below puts that center just inside the right edge of the screen.
+ */
+
+/* Let the palette backdrop show through the page */
+html[data-gears] body {
+  background: transparent !important;
+}
+
+html[data-gears] #about,
+html[data-gears] #skills,
+html[data-gears] #projects,
+html[data-gears] #experience,
+html[data-gears] #games,
+html[data-gears] #contact {
+  background-color: transparent !important;
+}
+
+/* Fixed backdrop behind all content: palette color + glow + gears */
+.clockwork {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  transition: background-color 0.8s ease, color 0.8s ease;
+}
+
+/* Giant pair half outside the right edge, mirrored so the small gear faces inward */
+.clockwork__gears {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 130vmin;
+  transform: translate3d(calc(100vw - 88vmin), calc(62vh - 73.7vmin), 0);
+  will-change: transform;
+}
+
+.clockwork__gears svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transform: scaleX(-1);
+}
+
+.clockwork[data-skin='professional'] .clockwork__gears {
+  opacity: 0.2;
+}
+
+.clockwork[data-skin='personal'] .clockwork__gears {
+  opacity: 0.32;
+}
+
+/* Glow behind the big gear, in the color of the current section */
+.clockwork__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at calc(100% - 6vmin) 62%, currentColor, transparent 60vmin);
+  opacity: 0.35;
+  transition: color 0.8s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clockwork,
+  .clockwork * {
+    transition: none !important;
+  }
+}

@@ -1,493 +1,169 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { animated, to, useSpringValue } from 'react-spring'
+import type { SpringConfig } from 'react-spring'
 import '../styles/GooeyCursor.css'
 
-const GooeyCursor: React.FC = () => {
-  const cursorLineBoxRef = useRef<HTMLDivElement>(null)
-  const redDotRef = useRef<HTMLDivElement>(null)
-  const redCircleRef = useRef<HTMLDivElement>(null)
-  const goeryContainerRef = useRef<HTMLDivElement>(null)
-  const bc1Ref = useRef<HTMLDivElement>(null) // Center bubble 1 (follows mouse directly)
-  const bc2Ref = useRef<HTMLDivElement>(null) // Center bubble 2 (follows bc1)
-  const bc3Ref = useRef<HTMLDivElement>(null) // Center bubble 3 (follows red circle for fluid animation)
-  const b1Ref = useRef<HTMLDivElement>(null)
-  const b2Ref = useRef<HTMLDivElement>(null)
-  const b3Ref = useRef<HTMLDivElement>(null)
-  
-  // State to track if we should show gooey bubbles (only when scroll is 0)
-  const [showGoeyBubbles, setShowGoeyBubbles] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
-  
-  // Ref to track the hero section for constraint bounds
-  const heroSectionRef = useRef<HTMLElement | null>(null)
-  
-  // Position history buffer for bc3 delayed following (1 second delay)
-  const positionHistoryRef = useRef<Array<{x: number, y: number, timestamp: number}>>([])
-  const DELAY_TIME =5 // 1 second in milliseconds
-  
-  const mousePositionRef = useRef({ x: 0, y: 0 });
-  const cursorPositionRef = useRef({ x: 0, y: 0 });
-  const animationFrameRef = useRef<number | null>(null);
-  
-  // Helper function to constrain positions within hero section (for professional theme)
-  const constrainPosition = (x: number, y: number) => {
-    const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
-    
-    if (!isProfessionalTheme || !heroSectionRef.current) {
-      return { x, y } // No constraints for personal theme or if hero section not found
-    }
-    
-    // Con el nuevo posicionamiento absoluto, las coordenadas del ratón (e.clientY)
-    // deben ajustarse por el scroll de la página para que coincidan con la posición
-    // del contenedor de las burbujas.
-    const scrollY = window.scrollY
-    const adjustedY = y + scrollY
+// Same physics as muhammadaamirmalik.com: the front bubble chases the mouse with a fast
+// spring and the other two chase the bubble in front of them with a heavy, slow spring
+const FAST = { tension: 1200, friction: 40 }
+const SLOW = { mass: 10, tension: 200, friction: 50 }
 
-    const heroRect = heroSectionRef.current.getBoundingClientRect()
-    
-    // Los límites ahora son relativos al propio contenedor de la sección hero,
-    // que es de 100vh de alto.
-    const marginTop = 50
-    const marginBottom = 0
-    const marginSides = 50
-    
-    const heroTop = marginTop
-    // La pared blanca es la altura de la sección menos el margen inferior.
-    const heroBottom = heroRect.height - marginBottom
-    const heroLeft = marginSides
-    const heroRight = heroRect.width - marginSides
-    
-    const constrainedX = Math.max(heroLeft, Math.min(x, heroRight))
-    // Usamos el 'adjustedY' que considera el scroll.
-    const constrainedY = Math.max(heroTop, Math.min(adjustedY, heroBottom))
-    
-    return { x: constrainedX, y: constrainedY }
-  }
+// The ring closes 1/8 of the remaining distance per 60fps frame (react-animated-cursor's trailingSpeed)
+const TRAILING_SPEED = 8
+const FRAME_MS = 1000 / 60
+
+// Pointer sizes in px: normal, over a clickable / mouse pressed, and pressing a clickable
+const DOT_SIZE = 8
+const RING_SIZE = 30
+const DOT_ACTIVE_SIZE = 16
+const DOT_PRESS_SIZE = 19
+
+const CLICKABLES = [
+  'a',
+  'input[type="text"]',
+  'input[type="email"]',
+  'input[type="number"]',
+  'input[type="submit"]',
+  'input[type="image"]',
+  'label[for]',
+  'select',
+  'textarea',
+  'button',
+  'svg',
+  '.link',
+].join(',')
+
+const trans = (x: number, y: number) => `translate3d(${x}px,${y}px,0) translate3d(-50%,-50%,0)`
+
+// useSpringValue instead of useSpring: in react-spring 10, useSpring re-applies its initial
+// values on every re-render, which snapped the bubbles back to the corner on hover.
+// One spring per axis, which is how react-spring animates an [x, y] array anyway.
+const useBubbleSpring = (config: SpringConfig) => ({
+  x: useSpringValue(0, { config }),
+  y: useSpringValue(0, { config }),
+})
+
+const GooeyCursor: React.FC = () => {
+  const gooeyRef = useRef<HTMLDivElement>(null)
+  const dotRef = useRef<HTMLDivElement>(null)
+  const ringRef = useRef<HTMLDivElement>(null)
+
+  const [visible, setVisible] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const [pressed, setPressed] = useState(false)
+
+  const front = useBubbleSpring(FAST)
+  const middle = useBubbleSpring(SLOW)
+  const back = useBubbleSpring(SLOW)
 
   useEffect(() => {
-    // Find the hero section for constraint bounds
-    heroSectionRef.current = document.getElementById('home')
-    
-    const handleMouseLeave = () => {
-      if (redDotRef.current) redDotRef.current.style.display = 'none';
-      if (redCircleRef.current) redCircleRef.current.style.display = 'none';
-    };
+    // Each slow bubble keeps chasing the bubble in front of it
+    middle.x.start({ to: front.x })
+    middle.y.start({ to: front.y })
+    back.x.start({ to: middle.x })
+    back.y.start({ to: middle.y })
+  }, [front.x, front.y, middle.x, middle.y, back.x, back.y])
 
-    const handleMouseEnter = () => {
-      if (redDotRef.current) redDotRef.current.style.display = 'block';
-      if (redCircleRef.current) redCircleRef.current.style.display = 'block';
-    };
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      
-      // Always show gooey bubbles in professional theme, only hide on scroll for personal theme
-      const shouldShowBubbles = scrollY === 0
-      setShowGoeyBubbles(shouldShowBubbles)
-      
-      // For professional theme, always keep bubbles visible but constrained to hero area
-      // For personal theme, hide when scrolling
-      if (goeryContainerRef.current) {
-        const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
-        if (isProfessionalTheme) {
-          goeryContainerRef.current.style.display = 'block'
-        } else {
-          goeryContainerRef.current.style.display = shouldShowBubbles ? 'block' : 'none'
-        }
-      }
-    }
+  useEffect(() => {
+    const target = { x: 0, y: 0 }
+    const ring = { x: 0, y: 0 }
+    let frame = 0
+    let lastTime = performance.now()
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isInitialized) {
-        setIsInitialized(true);
+      target.x = e.clientX
+      target.y = e.clientY
+
+      if (dotRef.current) {
+        dotRef.current.style.left = `${e.clientX}px`
+        dotRef.current.style.top = `${e.clientY}px`
       }
 
-      const { clientX: x, clientY: y } = e
-
-      // For the new absolute positioning, we need the mouse position
-      // relative to the #home element, not the viewport.
-      const heroRect = heroSectionRef.current?.getBoundingClientRect()
-      const relativeX = x - (heroRect?.left || 0)
-      const relativeY = y - (heroRect?.top || 0)
-
-      // Update the shared mouse position for the bubble animation loop
-      mousePositionRef.current = { x: relativeX, y: relativeY };
-      // Update the shared global cursor position for the red circle animation
-      cursorPositionRef.current = { x, y };
-
-      // Position cursor lines at mouse position (GLOBAL)
-      if (cursorLineBoxRef.current) {
-        cursorLineBoxRef.current.style.left = `${x}px`
-        cursorLineBoxRef.current.style.top = `${y}px`
-      }
-
-      // Position red dot at mouse position (GLOBAL - always active)
-      if (redDotRef.current) {
-        redDotRef.current.style.left = `${x}px`
-        redDotRef.current.style.top = `${y}px`
-      }
-    };
-    
-    const animate = () => {
-      // Animate red circle to follow the cursor dot continuously
-      if (redCircleRef.current) {
-        const { x: targetX, y: targetY } = cursorPositionRef.current;
-        const currentLeft = parseFloat(redCircleRef.current.style.left) || targetX;
-        const currentTop = parseFloat(redCircleRef.current.style.top) || targetY;
-
-        const easing = 0.025; // Smoothing factor for the chase effect
-        const deltaX = (targetX - currentLeft) * easing;
-        const deltaY = (targetY - currentTop) * easing;
-
-        const newX = currentLeft + deltaX;
-        const newY = currentTop + deltaY;
-
-        redCircleRef.current.style.left = `${newX}px`;
-        redCircleRef.current.style.top = `${newY}px`;
-      }
-
-      const { x, y } = mousePositionRef.current; // Use the stored mouse position
-
-      // Animate gooey bubbles - always for professional theme, only at scroll=0 for personal theme
-      const isProfessionalTheme = document.body.classList.contains('cursor-none-active')
-      const shouldAnimateBubbles = isProfessionalTheme || (showGoeyBubbles && window.scrollY === 0)
-      
-      if (shouldAnimateBubbles) {
-        // Center bubble 1 - follows mouse with specified speed
-        if (bc1Ref.current) {
-          const currentTransform = bc1Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
-          
-          // Original bubble: 0.025 speed with constraints
-          const deltaX = (x - currentX) * 0.025
-          const deltaY = (y - currentY) * 0.025
-          
-          const targetX = currentX + deltaX
-          const targetY = currentY + deltaY
-          
-          // Apply constraints for professional theme
-          const constrainedPos = constrainPosition(targetX, targetY)
-          const newX = constrainedPos.x
-          const newY = constrainedPos.y
-          
-          bc1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-          
-          // Save bc1 position to history for bc3 delayed following
-          const currentTime = Date.now()
-          positionHistoryRef.current.push({
-            x: newX,
-            y: newY,
-            timestamp: currentTime
-          })
-          
-          // Clean old positions (older than delay time + 500ms buffer)
-          positionHistoryRef.current = positionHistoryRef.current.filter(
-            pos => currentTime - pos.timestamp <= DELAY_TIME + 150
-          )
-        }
-
-        // Center bubble 2 - follows bc1 with slight delay (keep original behavior)
-        if (bc2Ref.current) {
-          const currentTransform = bc2Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
-          
-          const deltaX = (x - currentX) * 0.15 // Moderate lag for fluid effect
-          const deltaY = (y - currentY) * 0.15
-          
-          const targetX = currentX + deltaX
-          const targetY = currentY + deltaY
-          
-          // Apply constraints for professional theme
-          const constrainedPos = constrainPosition(targetX, targetY)
-          const newX = constrainedPos.x
-          const newY = constrainedPos.y
-          
-          bc2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-        }
-
-        // Center bubble 3 - clone with 1 second delay following bc1's old trajectory
-        if (bc3Ref.current) {
-          const currentTime = Date.now()
-          
-          // Find the position from 1 second ago
-          const targetPosition = positionHistoryRef.current.find(
-            pos => currentTime - pos.timestamp >= DELAY_TIME
-          )
-          
-          if (targetPosition) {
-            // Get current bc3 position
-            const currentTransform = bc3Ref.current.style.transform
-            const currentX = currentTransform.includes('translate3d') 
-              ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-              : targetPosition.x
-            const currentY = currentTransform.includes('translate3d')
-              ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-              : targetPosition.y
-            
-            // bc3 follows the 1-second-old position of bc1
-            const deltaX = (targetPosition.x - currentX) * 0.08
-            const deltaY = (targetPosition.y - currentY) * 0.08
-            
-            const targetX = currentX + deltaX
-            const targetY = currentY + deltaY
-            
-            // Apply constraints for professional theme
-            const constrainedPos = constrainPosition(targetX, targetY)
-            const newX = constrainedPos.x
-            const newY = constrainedPos.y
-            
-            bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-          } else {
-            // If no history yet, follow bc1 directly (fallback for first second)
-            const bc1Transform = bc1Ref.current?.style.transform || ''
-            const bc1X = bc1Transform.includes('translate3d') 
-              ? parseFloat(bc1Transform.split('translate3d(')[1]?.split('px')[0] || '0')
-              : x
-            const bc1Y = bc1Transform.includes('translate3d')
-              ? parseFloat(bc1Transform.split('px, ')[1]?.split('px')[0] || '0')
-              : y
-            
-            const currentTransform = bc3Ref.current.style.transform
-            const currentX = currentTransform.includes('translate3d') 
-              ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-              : bc1X
-            const currentY = currentTransform.includes('translate3d')
-              ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-              : bc1Y
-            
-            const deltaX = (bc1X - currentX) * 0.015
-            const deltaY = (bc1Y - currentY) * 0.015
-            
-            const targetX = currentX + deltaX
-            const targetY = currentY + deltaY
-            
-            // Apply constraints for professional theme
-            const constrainedPos = constrainPosition(targetX, targetY)
-            const newX = constrainedPos.x
-            const newY = constrainedPos.y
-            
-            bc3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-          }
-        }
-
-        if (b1Ref.current) {
-          // Fastest large bubble - follows mouse with slight delay
-          const currentTransform = b1Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
-          
-          // Fast bubble: 0.08 speed with constraints
-          const deltaX = (x - currentX) * 0.08
-          const deltaY = (y - currentY) * 0.08
-          
-          const targetX = currentX + deltaX
-          const targetY = currentY + deltaY
-          
-          // Apply constraints for professional theme
-          const constrainedPos = constrainPosition(targetX, targetY)
-          const newX = constrainedPos.x
-          const newY = constrainedPos.y
-          
-          b1Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-        }
-
-        if (b2Ref.current) {
-          // Medium speed large bubble - follows mouse with more delay
-          const currentTransform = b2Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
-          
-          // Medium speed bubble: 0.04 speed with constraints
-          const deltaX = (x - currentX) * 0.04
-          const deltaY = (y - currentY) * 0.04
-          
-          const targetX = currentX + deltaX
-          const targetY = currentY + deltaY
-          
-          // Apply constraints for professional theme
-          const constrainedPos = constrainPosition(targetX, targetY)
-          const newX = constrainedPos.x
-          const newY = constrainedPos.y
-          
-          b2Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-        }
-
-        if (b3Ref.current) {
-          // Slowest large bubble - very delayed follow
-          const currentTransform = b3Ref.current.style.transform
-          const currentX = currentTransform.includes('translate3d') 
-            ? parseFloat(currentTransform.split('translate3d(')[1]?.split('px')[0] || '0')
-            : x
-          const currentY = currentTransform.includes('translate3d')
-            ? parseFloat(currentTransform.split('px, ')[1]?.split('px')[0] || '0')
-            : y
-          
-          // Slow bubble: 0.02 speed with constraints
-          const deltaX = (x - currentX) * 0.02
-          const deltaY = (y - currentY) * 0.02
-          
-          const targetX = currentX + deltaX
-          const targetY = currentY + deltaY
-          
-          // Apply constraints for professional theme
-          const constrainedPos = constrainPosition(targetX, targetY)
-          const newX = constrainedPos.x
-          const newY = constrainedPos.y
-          
-          b3Ref.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) translate3d(-50%, -50%, 0)`
-        }
-      }
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    const handleMouseDown = () => {
-      if (cursorLineBoxRef.current) {
-        cursorLineBoxRef.current.classList.add('active')
-      }
-      if (redDotRef.current) {
-        redDotRef.current.classList.add('click')
-      }
-      if (redCircleRef.current) {
-        redCircleRef.current.classList.add('click')
-      }
+      // Bubbles live inside the hero, so use coordinates relative to it
+      const rect = gooeyRef.current?.getBoundingClientRect()
+      front.x.start({ to: e.clientX - (rect?.left ?? 0) })
+      front.y.start({ to: e.clientY - (rect?.top ?? 0) })
     }
 
-    const handleMouseUp = () => {
-      if (cursorLineBoxRef.current) {
-        cursorLineBoxRef.current.classList.remove('active')
+    // Scaled by elapsed time so the ring keeps its speed even when the page drops frames
+    const animateRing = (now: number) => {
+      const step = 1 - Math.pow(1 - 1 / TRAILING_SPEED, (now - lastTime) / FRAME_MS)
+      lastTime = now
+      ring.x += (target.x - ring.x) * step
+      ring.y += (target.y - ring.y) * step
+      if (ringRef.current) {
+        ringRef.current.style.left = `${ring.x}px`
+        ringRef.current.style.top = `${ring.y}px`
       }
-      if (redDotRef.current) {
-        redDotRef.current.classList.remove('click')
-      }
-      if (redCircleRef.current) {
-        redCircleRef.current.classList.remove('click')
-      }
+      frame = requestAnimationFrame(animateRing)
     }
 
-    // Run the scroll handler once on mount to set the initial state correctly
-    handleScroll();
+    const handleMouseOver = (e: MouseEvent) => {
+      setVisible(true)
+      setHovering(!!(e.target as Element | null)?.closest?.(CLICKABLES))
+    }
 
-    document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('mouseenter', handleMouseEnter);
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    document.body.addEventListener('mousemove', handleMouseMove)
+    // relatedTarget is null only when the mouse leaves the window
+    const handleMouseOut = (e: MouseEvent) => {
+      if (!e.relatedTarget) setVisible(false)
+    }
+
+    const handleMouseDown = () => setPressed(true)
+    const handleMouseUp = () => setPressed(false)
+
+    window.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseover', handleMouseOver)
+    document.addEventListener('mouseout', handleMouseOut)
     document.addEventListener('mousedown', handleMouseDown)
     document.addEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = 'none'
+    frame = requestAnimationFrame(animateRing)
 
-    animationFrameRef.current = requestAnimationFrame(animate);
-    
-    // Cleanup function
     return () => {
-      window.removeEventListener('scroll', handleScroll)
-      document.body.removeEventListener('mousemove', handleMouseMove)
-      document.body.removeEventListener('mousedown', handleMouseDown)
-      document.body.removeEventListener('mouseup', handleMouseUp)
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      document.removeEventListener('mouseenter', handleMouseEnter);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      document.body.style.cursor = 'auto'
+      window.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseover', handleMouseOver)
+      document.removeEventListener('mouseout', handleMouseOut)
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('mouseup', handleMouseUp)
+      cancelAnimationFrame(frame)
     }
-  }, []) // Dependency array is empty to run only once on mount and unmount
+  }, [front.x, front.y])
+
+  const active = hovering || pressed
+  const dotSize = hovering && pressed ? DOT_PRESS_SIZE : active ? DOT_ACTIVE_SIZE : DOT_SIZE
+  const ringSize = active ? 0 : RING_SIZE
 
   return (
     <>
-      {/* Global Cursor Elements - Work everywhere on the website */}
-      
-      {/* Cursor Lines */}
-      <div 
-        ref={cursorLineBoxRef}
-        className="mk-cursor-line-box" 
-        style={{ top: 0, left: 0 }}
-      >
-        <div className="mk-cursor-line-right-1"></div>
-        <div className="mk-cursor-line-right-2"></div>
-        <div className="mk-cursor-line-bottom-1"></div>
-        <div className="mk-cursor-line-bottom-2"></div>
-      </div>
-
-      {/* Red Dot - Global Cursor */}
-      <div 
-        ref={redDotRef}
-        className="mk-red-dot"
-      ></div>
-
-      {/* Red Circle - Global Cursor */}
-      <div 
-        ref={redCircleRef}
+      {/* Red pointer - works over the whole site */}
+      <div
+        ref={ringRef}
         className="mk-red-circle"
+        style={{ width: ringSize, height: ringSize, opacity: visible ? 1 : 0 }}
+      ></div>
+      <div
+        ref={dotRef}
+        className="mk-red-dot"
+        style={{ width: dotSize, height: dotSize, opacity: visible ? 1 : 0 }}
       ></div>
 
-      {/* Hero Section Only - Gooey Bubbles (Completely hidden when scrolled) */}
-      <div 
-        ref={goeryContainerRef}
-        className="mk-gooery"
-        style={{ display: showGoeyBubbles ? 'block' : 'none' }}
-      >
+      {/* Gooey bubbles - clipped to the hero section */}
+      <div ref={gooeyRef} className="mk-gooery">
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="30" />
-            <feColorMatrix 
-              in="blur" 
-              values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 30 -7" 
+            <feColorMatrix
+              in="blur"
+              values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 30 -7"
             />
           </filter>
         </svg>
-        <div className="hooks-main" style={{ opacity: isInitialized ? 1 : 0 }}>
+        <div className="hooks-main">
           <div className="hooks-filter">
-            {/* Center bubbles - create the main fluid animation */}
-            <div 
-              ref={bc1Ref}
-              className="bc1" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
-            <div 
-              ref={bc2Ref}
-              className="bc2" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
-            <div 
-              ref={bc3Ref}
-              className="bc3" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
-            {/* Large decorative bubbles */}
-            <div 
-              ref={b1Ref}
-              className="b1" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
-            <div 
-              ref={b2Ref}
-              className="b2" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
-            <div 
-              ref={b3Ref}
-              className="b3" 
-              style={{ transform: 'translate3d(0px, 0px, 0) translate3d(-50%, -50%, 0)' }}
-            ></div>
+            <animated.div className="b1" style={{ transform: to([back.x, back.y], trans) }} />
+            <animated.div className="b2" style={{ transform: to([middle.x, middle.y], trans) }} />
+            <animated.div className="b3" style={{ transform: to([front.x, front.y], trans) }} />
           </div>
         </div>
       </div>
@@ -495,4 +171,4 @@ const GooeyCursor: React.FC = () => {
   )
 }
 
-export default GooeyCursor 
+export default GooeyCursor
