@@ -1,7 +1,7 @@
 /*
  * Clock Tower gears (see ClockworkGears.tsx).
- * The gear SVG is 732x685 units; mirrored, the big gear's center sits at 63.1% / 60.6% of it.
- * The position below puts that center just inside the right edge of the screen.
+ * The pair covers a 732x685-unit area; mirrored, the big gear's center sits at 63.1% / 60.6%
+ * of it. The position below puts that center just inside the right edge of the screen.
  */
 
 /* Let the palette backdrop show through the page */
@@ -34,24 +34,44 @@ html[data-gears] #contact {
   top: 0;
   left: 0;
   width: 130vmin;
-  transform: translate3d(calc(100vw - 88vmin), calc(62vh - 73.7vmin), 0);
+  aspect-ratio: 732 / 685;
+  transform: translate3d(calc(100vw - 88vmin), calc(62vh - 73.7vmin), 0) scaleX(-1);
+}
+
+/* Each gear is its own layer: rotating it with CSS doesn't re-render its textures */
+.clockwork__gear {
+  position: absolute;
   will-change: transform;
 }
 
-.clockwork__gears svg {
+.clockwork__gear svg,
+.clockwork__lines {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   overflow: visible;
-  transform: scaleX(-1);
+}
+
+.clockwork__lines {
+  position: absolute;
+  inset: 0;
+}
+
+/* Pixel-art design: a low-resolution canvas scaled up without smoothing */
+.clockwork__pixel {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .clockwork[data-skin='professional'] .clockwork__gears {
   opacity: 0.2;
 }
 
+/* Dark rusted metal on dark backgrounds needs more presence */
 .clockwork[data-skin='personal'] .clockwork__gears {
-  opacity: 0.32;
+  opacity: 0.55;
 }
 
 /* Glow behind the big gear, in the color of the current section */
