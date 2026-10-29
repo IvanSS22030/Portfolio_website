@@ -4,6 +4,9 @@ import backgroundVideo from '../assets/videos/Castlevania_Media.mp4';
 import professionalImage from '../assets/images/profile pictures/professional site image.jpg';
 import personalImage from '../assets/images/profile pictures/Personal site picture.jpg';
 
+// Word resume served from public/; both "Download CV" buttons download it
+const CV_FILE = '/Ivan-Joel-Sanchez-Santana-CV.docx';
+
 // Add these CSS keyframes at the top of your component
 const typingAnimation = `
 @keyframes typing {
@@ -237,7 +240,8 @@ I value clarity, creativity, and continuous growth, and I enjoy collaborating wi
                   <span className="absolute inset-0 bg-indigo-700 translate-y-[105%] transition-transform duration-500 ease-out group-hover:translate-y-0"></span>
                 </a>
                 <a 
-                  href="#" 
+                  href={CV_FILE}
+                  download
                   className="group relative px-6 py-3 border border-indigo-500 text-indigo-600 rounded-md overflow-hidden transition-all duration-500 hover:text-white hover:shadow-md"
                 >
                   <span className="relative z-10 transition-transform duration-500 group-hover:translate-y-[-1px]">Download CV</span>
@@ -298,7 +302,8 @@ I value clarity, creativity, and continuous growth, and I enjoy collaborating wi
                 My Powers
               </a>
               <a 
-                href="#" 
+                href={CV_FILE}
+                download
                 className="px-6 py-3 border border-amber-700 text-amber-400 rounded-md hover:bg-amber-900 hover:bg-opacity-50 transition-colors duration-300 font-serif"
               >
                 Ancient Scroll

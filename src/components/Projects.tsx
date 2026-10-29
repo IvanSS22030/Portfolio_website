@@ -3,6 +3,12 @@ import { useTheme } from '../context/ThemeContext';
 import { projects } from '../data/projects';
 import ImageCarousel from './ImageCarousel';
 
+// Button text for each kind of project link, and the note shown for closed-source projects
+const LINK_LABELS = {
+  professional: { repo: 'View on GitHub', video: 'Watch Video', private: 'Private code' },
+  personal: { repo: 'Examine Artifact', video: 'Behold the Vision', private: 'Sealed Artifact' },
+};
+
 const Projects: React.FC = () => {
   const { theme } = useTheme();
 
@@ -50,12 +56,20 @@ const Projects: React.FC = () => {
                     </span>
                   ))}
                 </div>
-                <a 
-                  href={project.link} 
-                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all duration-300 hover:shadow-md hover:shadow-blue-200"
-                >
-                  View Project
-                </a>
+                {project.link ? (
+                  <a
+                    href={project.link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all duration-300 hover:shadow-md hover:shadow-blue-200"
+                  >
+                    {LINK_LABELS.professional[project.link.kind]}
+                  </a>
+                ) : project.privateCode && (
+                  <span className="inline-block px-4 py-2 text-gray-500 border border-gray-300 rounded">
+                    {LINK_LABELS.professional.private}
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -114,12 +128,20 @@ const Projects: React.FC = () => {
                     </span>
                   ))}
                 </div>
-                <a 
-                  href={project.link} 
-                  className="inline-block px-4 py-2 bg-amber-800 text-amber-100 rounded border border-amber-700 hover:bg-amber-900 hover:border-amber-600 transition-all duration-300 hover:shadow-md hover:shadow-amber-900/30 font-serif"
-                >
-                  Examine Artifact
-                </a>
+                {project.link ? (
+                  <a
+                    href={project.link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-4 py-2 bg-amber-800 text-amber-100 rounded border border-amber-700 hover:bg-amber-900 hover:border-amber-600 transition-all duration-300 hover:shadow-md hover:shadow-amber-900/30 font-serif"
+                  >
+                    {LINK_LABELS.personal[project.link.kind]}
+                  </a>
+                ) : project.privateCode && (
+                  <span className="inline-block px-4 py-2 text-amber-500 border border-amber-900 rounded font-serif">
+                    {LINK_LABELS.personal.private}
+                  </span>
+                )}
               </div>
             </div>
           ))}

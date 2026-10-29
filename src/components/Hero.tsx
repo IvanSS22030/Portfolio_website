@@ -6,6 +6,7 @@ import typingSound from '../assets/Sounds/typewriter-typing.mp3';
 // import { Professional, Personal } from '../utils/Icons';
 // import AnimatedCursor from 'react-animated-cursor';
 import GooeyCursor from './GooeyCursor';
+import { useHasFinePointer } from '../hooks/useHasFinePointer';
 
 // Typing animation keyframes
 const typingAnimation = `
@@ -32,25 +33,6 @@ const hackerLines = [
 const finalLine = 'user_decrypted: Ivan Joel Sanchez Santana';
 
 const castleImage = '/images/castlevania-castle.jpg';
-
-// The custom cursor only makes sense with a mouse or trackpad, not on touch screens
-const FINE_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
-
-const useHasFinePointer = () => {
-  const [hasFinePointer, setHasFinePointer] = useState(
-    () => window.matchMedia?.(FINE_POINTER_QUERY).matches ?? false
-  );
-
-  useEffect(() => {
-    if (!window.matchMedia) return;
-    const mediaQuery = window.matchMedia(FINE_POINTER_QUERY);
-    const handleChange = () => setHasFinePointer(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  return hasFinePointer;
-};
 
 const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
@@ -319,6 +301,7 @@ const ProfessionalCursor: React.FC = () => {
 
 const Hero: React.FC = () => {
   const { theme } = useTheme();
+  // The custom cursor only makes sense with a mouse or trackpad, not on touch screens
   const hasFinePointer = useHasFinePointer();
   const [showTyping, setShowTyping] = useState(false);
   const [key, setKey] = useState(0);

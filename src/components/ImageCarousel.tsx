@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useHasFinePointer } from '../hooks/useHasFinePointer';
 
 interface ImageCarouselProps {
   images: string[];
@@ -17,16 +18,18 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  // Touch screens can't hover, so there the images advance on their own
+  const autoPlay = !useHasFinePointer();
 
   useEffect(() => {
-    if (!isHovered || images.length <= 1) return;
+    if ((!isHovered && !autoPlay) || images.length <= 1) return;
 
     const timer = setTimeout(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [currentImageIndex, isHovered, images.length]);
+  }, [currentImageIndex, isHovered, autoPlay, images.length]);
 
   // Calculate the aspect ratio of the first image to maintain consistency
   const [containerStyle, setContainerStyle] = useState<React.CSSProperties>({
@@ -69,7 +72,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false);
-          setCurrentImageIndex(0);
+          // A tap elsewhere also fires mouseleave; that must not restart autoplay
+          if (!autoPlay) setCurrentImageIndex(0);
         }}
       >
         {(overlayOpacity > 0 || hoverOverlayOpacity > 0) && (

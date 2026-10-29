@@ -21,7 +21,13 @@ export interface ProjectItem {
   readonly technologies: readonly string[];
   readonly image?: string; // Make this optional since we have images array
   readonly images?: string[]; // For projects with multiple images
-  readonly link: string;
+  readonly link?: ProjectLink; // No link: the card shows no button
+  readonly privateCode?: boolean; // Closed-source project: the card says so instead of linking
+}
+
+export interface ProjectLink {
+  readonly url: string;
+  readonly kind: 'repo' | 'video';
 }
 
 // Experience-related types

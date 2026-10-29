@@ -1,6 +1,13 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 
+const SOCIAL_LINKS = [
+  { label: 'LinkedIn', url: 'https://www.linkedin.com/in/ivan-joel-sanchez-santana/' },
+  { label: 'GitHub', url: 'https://github.com/IvanSS22030' },
+  { label: 'X', url: 'https://x.com/Ivanjoel2030' },
+  { label: 'YouTube', url: 'https://www.youtube.com/@AICoversenEspanol-in8zg' },
+];
+
 const Footer: React.FC = () => {
   const { theme } = useTheme();
   const year = new Date().getFullYear();
@@ -15,18 +22,17 @@ const Footer: React.FC = () => {
           </div>
           
           <div className="flex space-x-6">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">
-              LinkedIn
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">
-              GitHub
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">
-              Twitter
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">
-              Instagram
-            </a>
+            {SOCIAL_LINKS.map(({ label, url }) => (
+              <a
+                key={label}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors duration-300"
+              >
+                {label}
+              </a>
+            ))}
           </div>
         </div>
         
@@ -47,18 +53,17 @@ const Footer: React.FC = () => {
           </div>
           
           <div className="flex space-x-6">
-            <a href="#" className="text-amber-400 hover:text-amber-300 transition-colors duration-300 font-serif">
-              LinkedIn
-            </a>
-            <a href="#" className="text-amber-400 hover:text-amber-300 transition-colors duration-300 font-serif">
-              GitHub
-            </a>
-            <a href="#" className="text-amber-400 hover:text-amber-300 transition-colors duration-300 font-serif">
-              Twitter
-            </a>
-            <a href="#" className="text-amber-400 hover:text-amber-300 transition-colors duration-300 font-serif">
-              Instagram
-            </a>
+            {SOCIAL_LINKS.map(({ label, url }) => (
+              <a
+                key={label}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 hover:text-amber-300 transition-colors duration-300 font-serif"
+              >
+                {label}
+              </a>
+            ))}
           </div>
         </div>
         
