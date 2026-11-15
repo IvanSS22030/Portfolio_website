@@ -9,6 +9,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered from main.tsx, which also reloads the page when a new deploy takes over
+      injectRegister: false,
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'Ivan Joel Sanchez Portfolio',
@@ -32,6 +34,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // A new deploy takes over right away (registerSW then reloads the page). The plugin only
+        // sets these itself when it injects the registration, and main.tsx does that instead.
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,mp4,wav}'],
         runtimeCaching: [
           {

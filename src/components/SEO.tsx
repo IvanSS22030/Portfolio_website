@@ -67,11 +67,6 @@ const SEO: React.FC<SEOProps> = ({
         href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Pirata+One&display=swap"
         as="style"
       />
-      <link 
-        rel="preload" 
-        href={theme === 'personal' ? '/src/assets/videos/Castlevania_Media.mp4' : undefined}
-        as="video"
-      />
     </Helmet>
   );
 };

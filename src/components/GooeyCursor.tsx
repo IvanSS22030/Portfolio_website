@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useEffect, useRef, useState } from 'react'
 import { animated, to, useSpringValue } from 'react-spring'
 import type { SpringConfig } from 'react-spring'

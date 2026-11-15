@@ -52,7 +52,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, initialT
     });
   };
 
-  // Apply theme class and update document title
+  // Apply theme class. The page title is set per theme by the SEO component; setting it here
+  // too appended the suffix to SEO's title again on every change.
   useEffect(() => {
     const applyTheme = () => {
       try {
@@ -60,16 +61,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, initialT
         document.documentElement.classList.remove('theme-professional', 'theme-personal');
         // Add current theme class
         document.documentElement.classList.add(`theme-${theme}`);
-        
-        // Update document title
-        const defaultTitle = document.querySelector('title[data-default]')?.textContent;
-        if (!defaultTitle) {
-          console.warn('Default title element not found');
-        }
-        
-        document.title = theme === 'professional' 
-          ? `${defaultTitle || 'Portfolio'} | Ivan Joel Sanchez Santana` 
-          : `${defaultTitle || 'Portfolio'} | The Castlevania Portfolio`;
       } catch (error) {
         console.error('Error applying theme:', error);
       }

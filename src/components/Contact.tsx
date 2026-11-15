@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin } from 'lucide-react';
+import { Phone, Mail, MapPin, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 /*
@@ -72,78 +72,91 @@ const Contact: React.FC = () => {
           </div>
           
           <div>
-            <form
-              name={FORM_NAME}
-              method="POST"
-              data-netlify="true"
-              data-netlify-honeypot="bot-field"
-              onSubmit={handleSubmit}
-              className="space-y-6"
-            >
-              {/* `hidden` keeps both out of the space-y spacing */}
-              <input type="hidden" name="form-name" value={FORM_NAME} hidden />
-              {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
-              <p hidden>
-                <label>
-                  Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
-                </label>
-              </p>
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  autoComplete="name"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Your Name"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  autoComplete="email"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Your Email"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Your Message"
-                ></textarea>
-              </div>
-              
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-wait"
+            {status === 'sent' ? (
+              <div
+                role="status"
+                className="flex flex-col items-center text-center gap-4 p-8 bg-green-50 border border-green-200 rounded-lg"
               >
-                {status === 'sending' ? 'Sending...' : 'Send Message'}
-              </button>
-              {status === 'sent' && (
-                <p role="status" className="text-green-700">
-                  Thanks! Your message was sent. I'll get back to you soon.
+                <CheckCircle2 className="w-14 h-14 text-green-600" aria-hidden="true" />
+                <h4 className="text-2xl font-semibold text-gray-800">Message sent!</h4>
+                <p className="text-gray-600">Thanks for reaching out. I'll reply to your email soon.</p>
+                <button
+                  type="button"
+                  onClick={() => setStatus('idle')}
+                  className="px-5 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-300"
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <form
+                name={FORM_NAME}
+                method="POST"
+                data-netlify="true"
+                data-netlify-honeypot="bot-field"
+                onSubmit={handleSubmit}
+                className="space-y-6"
+              >
+                {/* `hidden` keeps both out of the space-y spacing */}
+                <input type="hidden" name="form-name" value={FORM_NAME} hidden />
+                {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
+                <p hidden>
+                  <label>
+                    Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                  </label>
                 </p>
-              )}
-              {status === 'error' && (
-                <p role="alert" className="text-red-600">
-                  Your message couldn't be sent. Please try again or email me at ivanj_ss@hotmail.com.
-                </p>
-              )}
-            </form>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    autoComplete="name"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Name"
+                  />
+                </div>
+              
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Email"
+                  />
+                </div>
+              
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Message"
+                  ></textarea>
+                </div>
+              
+                <button
+                  type="submit"
+                  disabled={status === 'sending'}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-wait"
+                >
+                  {status === 'sending' ? 'Sending...' : 'Send Message'}
+                </button>
+                {status === 'error' && (
+                  <p role="alert" className="p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+                    Your message couldn't be sent. Please try again or email me at ivanj_ss@hotmail.com.
+                  </p>
+                )}
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -189,78 +202,91 @@ const Contact: React.FC = () => {
           </div>
           
           <div>
-            <form
-              name={FORM_NAME}
-              method="POST"
-              data-netlify="true"
-              data-netlify-honeypot="bot-field"
-              onSubmit={handleSubmit}
-              className="space-y-6 bg-gray-900 p-6 rounded-lg border border-amber-900"
-            >
-              {/* `hidden` keeps both out of the space-y spacing */}
-              <input type="hidden" name="form-name" value={FORM_NAME} hidden />
-              {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
-              <p hidden>
-                <label>
-                  Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
-                </label>
-              </p>
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  autoComplete="name"
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
-                  placeholder="Inscribe your true name"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Ethereal Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  autoComplete="email"
-                  required
-                  className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
-                  placeholder="Where spectral messages may reach you"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Incantation</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  rows={4}
-                  className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
-                  placeholder="Speak your purpose"
-                ></textarea>
-              </div>
-              
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="px-6 py-3 bg-amber-800 text-amber-100 rounded-md border border-amber-700 hover:bg-amber-900 transition-colors duration-300 font-serif disabled:opacity-60 disabled:cursor-wait"
+            {status === 'sent' ? (
+              <div
+                role="status"
+                className="flex flex-col items-center text-center gap-4 bg-gray-900 p-8 rounded-lg border border-amber-700"
               >
-                {status === 'sending' ? 'Casting...' : 'Cast Summoning Spell'}
-              </button>
-              {status === 'sent' && (
-                <p role="status" className="text-amber-300 font-serif">
-                  Your summoning has been heard. I shall answer soon.
+                <CheckCircle2 className="w-14 h-14 text-amber-400" aria-hidden="true" />
+                <h4 className="text-2xl font-semibold text-amber-400 font-serif">Your summoning has been heard</h4>
+                <p className="text-amber-200">Your message has reached me. I shall answer soon.</p>
+                <button
+                  type="button"
+                  onClick={() => setStatus('idle')}
+                  className="px-5 py-2 border border-amber-700 text-amber-400 rounded-md hover:bg-amber-900 hover:bg-opacity-50 transition-colors duration-300 font-serif"
+                >
+                  Cast another spell
+                </button>
+              </div>
+            ) : (
+              <form
+                name={FORM_NAME}
+                method="POST"
+                data-netlify="true"
+                data-netlify-honeypot="bot-field"
+                onSubmit={handleSubmit}
+                className="space-y-6 bg-gray-900 p-6 rounded-lg border border-amber-900"
+              >
+                {/* `hidden` keeps both out of the space-y spacing */}
+                <input type="hidden" name="form-name" value={FORM_NAME} hidden />
+                {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
+                <p hidden>
+                  <label>
+                    Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                  </label>
                 </p>
-              )}
-              {status === 'error' && (
-                <p role="alert" className="text-red-400 font-serif">
-                  The spell failed. Try again, or send a raven to ivanj_ss@hotmail.com.
-                </p>
-              )}
-            </form>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    autoComplete="name"
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
+                    placeholder="Inscribe your true name"
+                  />
+                </div>
+              
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Ethereal Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
+                    placeholder="Where spectral messages may reach you"
+                  />
+                </div>
+              
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Incantation</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    rows={4}
+                    className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
+                    placeholder="Speak your purpose"
+                  ></textarea>
+                </div>
+              
+                <button
+                  type="submit"
+                  disabled={status === 'sending'}
+                  className="px-6 py-3 bg-amber-800 text-amber-100 rounded-md border border-amber-700 hover:bg-amber-900 transition-colors duration-300 font-serif disabled:opacity-60 disabled:cursor-wait"
+                >
+                  {status === 'sending' ? 'Casting...' : 'Cast Summoning Spell'}
+                </button>
+                {status === 'error' && (
+                  <p role="alert" className="p-4 rounded-md bg-red-950/50 border border-red-800 text-red-300 font-serif">
+                    The spell failed. Try again, or send a raven to ivanj_ss@hotmail.com.
+                  </p>
+                )}
+              </form>
+            )}
           </div>
         </div>
       </div>
