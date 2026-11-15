@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Registered from main.tsx, which also reloads the page when a new deploy takes over
       injectRegister: false,
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Ivan Joel Sanchez Portfolio',
         short_name: 'IJS Portfolio',
