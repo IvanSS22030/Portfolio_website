@@ -8,6 +8,7 @@ import ThemeToggle from './components/ThemeToggle';
 import ScrollToTop from './components/ScrollToTop';
 import SEO from './components/SEO';
 import ClockworkGears from './components/ClockworkGears';
+import CastleBats from './components/CastleBats';
 
 // Lazy load non-critical components
 const About = lazy(() => import('./components/About'));
@@ -35,6 +36,7 @@ function App() {
           <div className="min-h-screen">
             <SEO />
             <ClockworkGears />
+            <CastleBats />
             <Header />
             <main>
               <Hero />

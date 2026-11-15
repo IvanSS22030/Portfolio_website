@@ -1,0 +1,57 @@
+/*
+ * Castle bats (see CastleBats.tsx). Three nested layers, each with its own animation:
+ * the bat crosses the screen, bobs up and down while it does, and flaps through the sprite sheet.
+ */
+
+/* Above the page and the hero art, below the header (z-40) and the theme button */
+.castle-bats {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.castle-bat {
+  position: absolute;
+  left: 0;
+  animation-name: bat-cross;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.castle-bat--rtl {
+  animation-name: bat-cross-rtl;
+}
+
+@keyframes bat-cross {
+  from { transform: translateX(calc(var(--bat-width) * -1)); }
+  to { transform: translateX(100vw); }
+}
+
+@keyframes bat-cross-rtl {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(calc(var(--bat-width) * -1)); }
+}
+
+.castle-bat__bob {
+  animation: bat-bob ease-in-out infinite alternate;
+}
+
+@keyframes bat-bob {
+  from { transform: translateY(calc(var(--bat-amplitude) * -1)); }
+  to { transform: translateY(var(--bat-amplitude)); }
+}
+
+/* Pixel art scaled up without smoothing; steps(4) shows the four frames of the flap one by one */
+.castle-bat__sprite {
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: bat-flap 0.36s steps(4) infinite;
+}
+
+@keyframes bat-flap {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--bat-sheet-width) * -1) 0; }
+}

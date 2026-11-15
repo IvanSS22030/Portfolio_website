@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { animated, useSpringValue } from 'react-spring';
 import { useTheme } from '../context/ThemeContext';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import type { Theme } from '../types';
 import { BlueprintGearSvg, PixelGear } from './ClockworkGearArt';
 import { PAD, pitchRadius, tipRadius } from './clockworkGeometry';
@@ -90,24 +91,6 @@ const gearBox = ({ teeth, cx, cy }: PlacedGear): React.CSSProperties => {
     width: `${((half * 2) / AREA.w) * 100}%`,
     height: `${((half * 2) / AREA.h) * 100}%`,
   };
-};
-
-// --- Hooks ---------------------------------------------------------------------------------
-
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-
-const usePrefersReducedMotion = () => {
-  const [reduced, setReduced] = useState(() => window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false);
-
-  useEffect(() => {
-    if (!window.matchMedia) return;
-    const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
-    const handleChange = () => setReduced(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  return reduced;
 };
 
 // --- Component -----------------------------------------------------------------------------
