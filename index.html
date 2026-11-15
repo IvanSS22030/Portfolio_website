@@ -11,6 +11,13 @@
   </head>
   <body class="min-h-screen bg-white">
     <div id="root"></div>
+    <!-- Netlify Forms only detects forms in static HTML; the visible one lives in Contact.tsx -->
+    <form name="contact" data-netlify="true" data-netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <textarea name="message"></textarea>
+      <input name="bot-field" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

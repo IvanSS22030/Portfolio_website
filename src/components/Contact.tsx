@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
+/*
+ * Netlify Forms: index.html holds a hidden copy of this form so Netlify detects it when the
+ * site is deployed. Netlify stores each message and emails it to Ivan.
+ */
+const FORM_NAME = 'contact';
+
+type SendStatus = 'idle' | 'sending' | 'sent' | 'error';
+
 const Contact: React.FC = () => {
   const { theme } = useTheme();
+  const [status, setStatus] = useState<SendStatus>('idle');
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    setStatus('sending');
+    try {
+      const fields = [...new FormData(form)].map(([key, value]) => [key, String(value)]);
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(fields).toString(),
+      });
+      if (!response.ok) throw new Error(`Form submission failed: ${response.status}`);
+      form.reset();
+      setStatus('sent');
+    } catch {
+      setStatus('error');
+    }
+  };
 
   const professionalContact = (
     <section id="contact" className="py-20 bg-white">
@@ -44,12 +72,30 @@ const Contact: React.FC = () => {
           </div>
           
           <div>
-            <form className="space-y-6">
+            <form
+              name={FORM_NAME}
+              method="POST"
+              data-netlify="true"
+              data-netlify-honeypot="bot-field"
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
+              {/* `hidden` keeps both out of the space-y spacing */}
+              <input type="hidden" name="form-name" value={FORM_NAME} hidden />
+              {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
+              <p hidden>
+                <label>
+                  Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                </label>
+              </p>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input
                   type="text"
                   id="name"
+                  name="name"
+                  autoComplete="name"
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Your Name"
                 />
@@ -60,6 +106,9 @@ const Contact: React.FC = () => {
                 <input
                   type="email"
                   id="email"
+                  name="email"
+                  autoComplete="email"
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Your Email"
                 />
@@ -69,6 +118,8 @@ const Contact: React.FC = () => {
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                 <textarea
                   id="message"
+                  name="message"
+                  required
                   rows={4}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Your Message"
@@ -77,10 +128,21 @@ const Contact: React.FC = () => {
               
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+                disabled={status === 'sending'}
+                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-wait"
               >
-                Send Message
+                {status === 'sending' ? 'Sending...' : 'Send Message'}
               </button>
+              {status === 'sent' && (
+                <p role="status" className="text-green-700">
+                  Thanks! Your message was sent. I'll get back to you soon.
+                </p>
+              )}
+              {status === 'error' && (
+                <p role="alert" className="text-red-600">
+                  Your message couldn't be sent. Please try again or email me at ivanj_ss@hotmail.com.
+                </p>
+              )}
             </form>
           </div>
         </div>
@@ -127,12 +189,30 @@ const Contact: React.FC = () => {
           </div>
           
           <div>
-            <form className="space-y-6 bg-gray-900 p-6 rounded-lg border border-amber-900">
+            <form
+              name={FORM_NAME}
+              method="POST"
+              data-netlify="true"
+              data-netlify-honeypot="bot-field"
+              onSubmit={handleSubmit}
+              className="space-y-6 bg-gray-900 p-6 rounded-lg border border-amber-900"
+            >
+              {/* `hidden` keeps both out of the space-y spacing */}
+              <input type="hidden" name="form-name" value={FORM_NAME} hidden />
+              {/* Honeypot: people never see it, spam bots fill it in and Netlify drops the message */}
+              <p hidden>
+                <label>
+                  Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                </label>
+              </p>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Name</label>
                 <input
                   type="text"
                   id="name"
+                  name="name"
+                  autoComplete="name"
+                  required
                   className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
                   placeholder="Inscribe your true name"
                 />
@@ -143,6 +223,9 @@ const Contact: React.FC = () => {
                 <input
                   type="email"
                   id="email"
+                  name="email"
+                  autoComplete="email"
+                  required
                   className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
                   placeholder="Where spectral messages may reach you"
                 />
@@ -152,6 +235,8 @@ const Contact: React.FC = () => {
                 <label htmlFor="message" className="block text-sm font-medium text-amber-400 mb-1 font-serif">Your Incantation</label>
                 <textarea
                   id="message"
+                  name="message"
+                  required
                   rows={4}
                   className="w-full px-4 py-2 bg-gray-800 border border-amber-900 rounded-md focus:ring-amber-500 focus:border-amber-500 text-amber-200"
                   placeholder="Speak your purpose"
@@ -160,10 +245,21 @@ const Contact: React.FC = () => {
               
               <button
                 type="submit"
-                className="px-6 py-3 bg-amber-800 text-amber-100 rounded-md border border-amber-700 hover:bg-amber-900 transition-colors duration-300 font-serif"
+                disabled={status === 'sending'}
+                className="px-6 py-3 bg-amber-800 text-amber-100 rounded-md border border-amber-700 hover:bg-amber-900 transition-colors duration-300 font-serif disabled:opacity-60 disabled:cursor-wait"
               >
-                Cast Summoning Spell
+                {status === 'sending' ? 'Casting...' : 'Cast Summoning Spell'}
               </button>
+              {status === 'sent' && (
+                <p role="status" className="text-amber-300 font-serif">
+                  Your summoning has been heard. I shall answer soon.
+                </p>
+              )}
+              {status === 'error' && (
+                <p role="alert" className="text-red-400 font-serif">
+                  The spell failed. Try again, or send a raven to ivanj_ss@hotmail.com.
+                </p>
+              )}
             </form>
           </div>
         </div>
