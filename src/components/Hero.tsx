@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { ChevronDown } from 'lucide-react';
 import typewriterSound from '../assets/Sounds/typewriter.wav';
@@ -38,42 +38,54 @@ const HackerIntro: React.FC = () => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [typingDone, setTypingDone] = useState(false);
-  const [isAudioReady, setIsAudioReady] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // A ref, not state: the typing interval reads it long after the render that created it
+  const audioReadyRef = useRef(false);
+  // Each keystroke plays its own copy of the typewriter recording, which is 26 s long. They are
+  // all stopped together, also when the intro unmounts mid-typing (switching to the light theme);
+  // otherwise they kept playing after the intro was gone.
+  const keystrokeSoundsRef = useRef(new Set<HTMLAudioElement>());
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopTyping = useCallback(() => {
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    keystrokeSoundsRef.current.forEach(sound => sound.pause());
+    keystrokeSoundsRef.current.clear();
+  }, []);
 
   useEffect(() => {
     const audioElement = new Audio(typewriterSound);
     audioElement.volume = 0.2;
     audioRef.current = audioElement;
-    
+
     // Define handlers
     const handleCanPlayThrough = () => {
       console.log('[HackerIntro] Audio ready to play');
-      setIsAudioReady(true);
+      audioReadyRef.current = true;
     };
-    
+
     const handleError = (e: Event) => {
       console.error('[HackerIntro] Audio error:', e);
-      setIsAudioReady(false);
+      audioReadyRef.current = false;
     };
 
     audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
     audioElement.addEventListener('error', handleError);
-    
+
     // Preload the audio
     audioElement.load();
-    
+
     return () => {
       audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
       audioElement.removeEventListener('error', handleError);
       audioElement.pause();
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
+      stopTyping();
     };
-  }, []);
+  }, [stopTyping]);
 
   // Show hacker lines one by one
   useEffect(() => {
@@ -95,81 +107,33 @@ const HackerIntro: React.FC = () => {
   }, [visibleLines, typingDone, typedText.length]);
 
   const startNameTyping = () => {
-    if (!audioRef.current || !isAudioReady) {
-      console.warn('[HackerIntro] Audio not ready');
-      return;
-    }
-
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-    }
-
+    stopTyping();
     let currentIndex = 0;
-    let activeAudioElements: HTMLAudioElement[] = [];
 
     typingIntervalRef.current = setInterval(() => {
       if (currentIndex < finalLine.length) {
         setTypedText(finalLine.substring(0, currentIndex + 1));
-        
-        if (audioRef.current && isAudioReady) {
-          const audioClone = audioRef.current.cloneNode() as HTMLAudioElement;
-          audioClone.volume = 0.2;
-          activeAudioElements.push(audioClone);
-          
-          const playPromise = audioClone.play();
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                audioClone.addEventListener('ended', () => {
-                  const index = activeAudioElements.indexOf(audioClone);
-                  if (index > -1) {
-                    activeAudioElements.splice(index, 1);
-                    audioClone.remove();
-                  }
-                });
-              })
-              .catch(error => {
-                console.warn(`[HackerIntro] Sound play failed:`, error);
-              });
-          }
+
+        // The name types even without sound (e.g. a phone that hasn't loaded the recording yet)
+        if (audioRef.current && audioReadyRef.current) {
+          const sound = audioRef.current.cloneNode() as HTMLAudioElement;
+          sound.volume = 0.2;
+          const sounds = keystrokeSoundsRef.current;
+          sounds.add(sound);
+          sound.addEventListener('ended', () => sounds.delete(sound));
+          sound.play().catch(error => {
+            sounds.delete(sound);
+            // pause() from stopTyping interrupts a play that hasn't started yet; that's expected
+            if (error.name !== 'AbortError') console.warn('[HackerIntro] Sound play failed:', error);
+          });
         }
         currentIndex++;
       } else {
-        // Stop all active audio elements
-        activeAudioElements.forEach(audio => {
-          audio.pause();
-          audio.remove();
-        });
-        activeAudioElements = [];
-        
-        if (typingIntervalRef.current) {
-          clearInterval(typingIntervalRef.current);
-        }
+        stopTyping();
         setTypingDone(true);
       }
     }, 80);
   };
-
-  useEffect(() => {
-    if (typingDone) {
-      console.log('[HackerIntro] typingDone is true. Ensuring all audio is stopped.');
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      // Also stop any cloned audio elements that might still be playing
-      const audioElements = document.querySelectorAll('audio');
-      audioElements.forEach(audio => {
-        if (audio !== audioRef.current) {
-          audio.pause();
-          audio.remove();
-        }
-      });
-    }
-  }, [typingDone]);
 
   const showCursor = !typingDone && visibleLines === hackerLines.length && typedText.length < finalLine.length;
   const displayName = typedText.replace('user_decrypted: ', '');
@@ -177,7 +141,6 @@ const HackerIntro: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[120px] md:min-h-[160px] mb-6">
       <style>{typingAnimation}</style>
-      <audio ref={audioRef} src={typewriterSound} preload="auto" />
       <div className="font-mono text-green-400 text-base md:text-lg text-left w-full max-w-xl mx-auto select-none">
         {hackerLines.map((line, i) => (
           <div key={i} className={`transition-opacity duration-500 ${visibleLines > i ? 'opacity-100' : 'opacity-0'}`}>{line}</div>
