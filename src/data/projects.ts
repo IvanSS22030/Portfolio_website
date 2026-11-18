@@ -11,7 +11,7 @@ export const projects: ProjectItem[] = [
       "/images/projects/game-route-2.webp",
       "/images/projects/game-route-3.webp"
     ],
-    link: { url: "https://github.com/IvanSS22030/porfolio_game", kind: "repo" }
+    links: [{ url: "https://github.com/IvanSS22030/porfolio_game", kind: "repo" }]
   },
   {
     id: 2,
@@ -23,7 +23,10 @@ export const projects: ProjectItem[] = [
       "/images/projects/dimensional-view-5d.webp",
       "/images/projects/dimensional-view-escape.webp"
     ],
-    link: { url: "https://github.com/IvanSS22030/dimensional-view", kind: "repo" }
+    links: [
+      { url: "https://ivanss22030.github.io/dimensional-view/", kind: "demo" },
+      { url: "https://github.com/IvanSS22030/dimensional-view", kind: "repo" }
+    ]
   },
   {
     id: 3,
@@ -50,6 +53,6 @@ export const projects: ProjectItem[] = [
     description: "Advanced voice cloning and synthesis using RVC (Retrieval-based Voice Conversion) technology.",
     technologies: ["RVC", "Model Training", "Hugging Face", "Python", "Batch"],
     image: "/images/projects/abinadersh.jpeg",
-    link: { url: "https://www.youtube.com/watch?v=Ku8Hwps30lg", kind: "video" }
+    links: [{ url: "https://www.youtube.com/watch?v=Ku8Hwps30lg", kind: "video" }]
   }
 ];

@@ -4,9 +4,9 @@ export const experiences: WorkExperience[] = [
   {
     id: 1,
     company: "Thryv",
-    position: "Backend Developer",
+    position: "Data Engineer",
     period: "2025 - Present",
-    description: "I work with automation of reports and processes using RPA and agentic automation and different CRMs that require me to create custom scripts and queries to fetch data and create reports. I also give maintenance to the backend of a web application that is used by the company."
+    description: "I design and maintain ETL pipelines and end-to-end automations with Python, Batch and UiPath for reporting, alerts and bulk data loads. I extract and validate Salesforce data with SOQL, keep databases clean and consistent, and build Power BI and SQL reports for leadership."
   },
   {
     id: 2,
