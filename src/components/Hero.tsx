@@ -386,7 +386,8 @@ const Hero: React.FC = () => {
       id="home" 
       className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none-active"
     >
-      {hasFinePointer && <GooeyCursor />}
+      {/* With a mouse the bubbles follow it; on touch screens they wander on their own */}
+      <GooeyCursor mode={hasFinePointer ? 'pointer' : 'auto'} />
       <style>{typingAnimation}</style>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         {/* Font scales with the screen so the one-line typing animation never gets clipped */}

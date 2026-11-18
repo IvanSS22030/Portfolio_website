@@ -99,10 +99,10 @@
   overflow: hidden; /* Prevent any gooey effects from bleeding outside */
 }
 
-/* Responsive breakpoints */
+/* Responsive breakpoints: bigger relative to the screen on narrow screens, without covering the hero */
 @media (max-width: 800px) {
   :root {
-    --circleDividant: 3;
+    --circleDividant: 5;
   }
 }
 

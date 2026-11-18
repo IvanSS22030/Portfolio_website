@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { animated, to, useSpringValue } from 'react-spring'
 import type { SpringConfig } from 'react-spring'
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import '../styles/GooeyCursor.css'
 
 // Same physics as muhammadaamirmalik.com: the front bubble chases the mouse with a fast
@@ -35,6 +36,20 @@ const CLICKABLES = [
 
 const trans = (x: number, y: number) => `translate3d(${x}px,${y}px,0) translate3d(-50%,-50%,0)`
 
+// Touch screens have no mouse to follow, so the bubble wanders through the hero on its own:
+// two sine waves per axis with unrelated speeds draw a smooth path that never quite repeats.
+// Fractions of the hero's width and height, and the speed of each wave in radians per second.
+const wanderPath = (seconds: number, width: number, height: number) => ({
+  x: width * (0.5 + 0.3 * Math.sin(seconds * 0.41) + 0.12 * Math.sin(seconds * 1.07 + 1.3)),
+  y: height * (0.5 + 0.26 * Math.sin(seconds * 0.29 + 0.6) + 0.1 * Math.sin(seconds * 0.83)),
+})
+
+// After a touch the bubble waits a moment where the finger left it, then drifts back to its path
+const TOUCH_HOLD_MS = 1200
+const TOUCH_RETURN_MS = 1500
+
+const smoothstep = (k: number) => k * k * (3 - 2 * k)
+
 // useSpringValue instead of useSpring: in react-spring 10, useSpring re-applies its initial
 // values on every re-render, which snapped the bubbles back to the corner on hover.
 // One spring per axis, which is how react-spring animates an [x, y] array anyway.
@@ -43,7 +58,14 @@ const useBubbleSpring = (config: SpringConfig) => ({
   y: useSpringValue(0, { config }),
 })
 
-const GooeyCursor: React.FC = () => {
+type GooeyCursorProps = {
+  // 'pointer': the bubbles and the red pointer follow the mouse.
+  // 'auto' (touch screens): only the bubbles, wandering on their own and following the finger.
+  mode?: 'pointer' | 'auto'
+}
+
+const GooeyCursor: React.FC<GooeyCursorProps> = ({ mode = 'pointer' }) => {
+  const reducedMotion = usePrefersReducedMotion()
   const gooeyRef = useRef<HTMLDivElement>(null)
   const dotRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
@@ -65,6 +87,7 @@ const GooeyCursor: React.FC = () => {
   }, [front.x, front.y, middle.x, middle.y, back.x, back.y])
 
   useEffect(() => {
+    if (mode !== 'pointer') return
     const target = { x: 0, y: 0 }
     const ring = { x: 0, y: 0 }
     let frame = 0
@@ -126,7 +149,89 @@ const GooeyCursor: React.FC = () => {
       document.removeEventListener('mouseup', handleMouseUp)
       cancelAnimationFrame(frame)
     }
-  }, [front.x, front.y])
+  }, [mode, front.x, front.y])
+
+  // Touch screens: the front bubble follows the wander path (or the finger), the others trail it.
+  // The spring values are stable across renders; the { x, y } objects holding them are not.
+  const { x: frontX, y: frontY } = front
+  const { x: middleX, y: middleY } = middle
+  const { x: backX, y: backY } = back
+  useEffect(() => {
+    if (mode !== 'auto') return
+    const area = gooeyRef.current
+    if (!area) return
+
+    let frame = 0
+    let onScreen = true
+    let placed = false
+    const start = performance.now()
+    // Where the finger is (or was), and when it lifted; Infinity while it is still down
+    let touch: { x: number; y: number; liftedAt: number } | null = null
+
+    const tick = (now: number) => {
+      frame = requestAnimationFrame(tick)
+      if (!onScreen) return
+
+      const { width, height } = area.getBoundingClientRect()
+      // With reduced motion the bubble stays put and only moves when touched
+      let { x, y } = wanderPath(reducedMotion ? 0 : (now - start) / 1000, width, height)
+
+      if (touch) {
+        const k = (now - touch.liftedAt - TOUCH_HOLD_MS) / TOUCH_RETURN_MS
+        if (k >= 1) {
+          touch = null
+        } else {
+          const blend = k <= 0 ? 0 : smoothstep(k)
+          x = touch.x + (x - touch.x) * blend
+          y = touch.y + (y - touch.y) * blend
+        }
+      }
+
+      if (!placed) {
+        // Start on the path instead of flying in from the corner
+        placed = true
+        ;[frontX, middleX, backX].forEach(spring => spring.set(x))
+        ;[frontY, middleY, backY].forEach(spring => spring.set(y))
+      }
+      frontX.start({ to: x })
+      frontY.start({ to: y })
+    }
+
+    const handleTouch = (e: TouchEvent) => {
+      const point = e.touches[0]
+      if (!point) return
+      const rect = area.getBoundingClientRect()
+      const x = point.clientX - rect.left
+      const y = point.clientY - rect.top
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return
+      touch = { x, y, liftedAt: Infinity }
+    }
+
+    const handleTouchEnd = () => {
+      if (touch && touch.liftedAt === Infinity) touch.liftedAt = performance.now()
+    }
+
+    // No work while the hero is scrolled out of view
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting
+    })
+    observer.observe(area)
+
+    window.addEventListener('touchstart', handleTouch, { passive: true })
+    window.addEventListener('touchmove', handleTouch, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd)
+    window.addEventListener('touchcancel', handleTouchEnd)
+    frame = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('touchstart', handleTouch)
+      window.removeEventListener('touchmove', handleTouch)
+      window.removeEventListener('touchend', handleTouchEnd)
+      window.removeEventListener('touchcancel', handleTouchEnd)
+    }
+  }, [mode, reducedMotion, frontX, frontY, middleX, middleY, backX, backY])
 
   const active = hovering || pressed
   const dotSize = hovering && pressed ? DOT_PRESS_SIZE : active ? DOT_ACTIVE_SIZE : DOT_SIZE
@@ -134,17 +239,21 @@ const GooeyCursor: React.FC = () => {
 
   return (
     <>
-      {/* Red pointer - works over the whole site */}
-      <div
-        ref={ringRef}
-        className="mk-red-circle"
-        style={{ width: ringSize, height: ringSize, opacity: visible ? 1 : 0 }}
-      ></div>
-      <div
-        ref={dotRef}
-        className="mk-red-dot"
-        style={{ width: dotSize, height: dotSize, opacity: visible ? 1 : 0 }}
-      ></div>
+      {/* Red pointer - works over the whole site; only with a mouse */}
+      {mode === 'pointer' && (
+        <>
+          <div
+            ref={ringRef}
+            className="mk-red-circle"
+            style={{ width: ringSize, height: ringSize, opacity: visible ? 1 : 0 }}
+          ></div>
+          <div
+            ref={dotRef}
+            className="mk-red-dot"
+            style={{ width: dotSize, height: dotSize, opacity: visible ? 1 : 0 }}
+          ></div>
+        </>
+      )}
 
       {/* Gooey bubbles - clipped to the hero section */}
       <div ref={gooeyRef} className="mk-gooery">
