@@ -71,7 +71,8 @@ const About: React.FC = () => {
   const animationRef = useRef<number | null>(null);
   const [isVideoVisible, setIsVideoVisible] = useState(false);
   const [isInView, setIsInView] = useState(false);
-  
+  const professionalSectionRef = useRef<HTMLElement>(null);
+
   // Smooth audio fade function
   const fadeAudio = (video: HTMLVideoElement, targetVolume: number, duration: number = 1000) => {
     // Cancel any ongoing animation
@@ -162,39 +163,30 @@ const About: React.FC = () => {
     };
   }, [theme]);
 
-  // New useEffect for scroll animations
+  // Fade-in on scroll for the light theme's section. Each theme renders its own <section>, so
+  // the observer has to start again after a theme switch: watching only the section that existed
+  // on first load left the light theme's profile invisible when the page opened in dark mode.
   useEffect(() => {
-    const options = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1,
-    };
+    const section = professionalSectionRef.current;
+    if (!section || isInView) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
           observer.disconnect();
         }
-      });
-    }, options);
-
-    const section = document.getElementById('about');
-    if (section) {
-      observer.observe(section);
-    }
-
-    return () => {
-      if (section) {
-        observer.disconnect();
-      }
-    };
-  }, []);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [theme, isInView]);
 
   const professionalAbout = (
     <>
       <style>{typingAnimation}</style>
-      <section id="about" className="py-20 bg-white">
+      <section id="about" ref={professionalSectionRef} className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <h2 className={`text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 ${isInView ? 'animate-[fadeInUp_0.6s_ease-in-out_forwards]' : 'opacity-0'}`}>About Me</h2>
           
