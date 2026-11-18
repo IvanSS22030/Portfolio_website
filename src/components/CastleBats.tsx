@@ -73,6 +73,86 @@ const drawSpriteSheet = () => {
   return canvas.toDataURL('image/png');
 };
 
+// --- Death ---------------------------------------------------------------------------------
+
+// A shot bat bursts into flames: a 16x16 fireball that grows, hollows out and fades in 6 frames
+const BURST_SIZE = 16;
+const BURST_FRAMES = 6;
+const BURST_COLORS = ['#5C1428', '#C8302C', '#FF8A2A', '#FFE066', '#FFFFFF']; // coolest to hottest
+const BURST_RADIUS = [2.5, 4.5, 6, 7, 7.6, 7.9];
+const BURST_HOLE = [0, 0, 1.5, 3.5, 5.2, 6.6]; // the middle burns out first
+const BURST_DENSITY = [1, 0.95, 0.85, 0.6, 0.4, 0.2]; // share of pixels still lit
+
+// Fixed noise, so every burst looks the same
+const noise = (x: number, y: number, frame: number) => {
+  const s = Math.sin(x * 12.9898 + y * 78.233 + frame * 37.719) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+const drawBurstSheet = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = BURST_SIZE * BURST_FRAMES;
+  canvas.height = BURST_SIZE;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+
+  for (let frame = 0; frame < BURST_FRAMES; frame++) {
+    for (let y = 0; y < BURST_SIZE; y++) {
+      for (let x = 0; x < BURST_SIZE; x++) {
+        const d = Math.hypot(x + 0.5 - BURST_SIZE / 2, y + 0.5 - BURST_SIZE / 2);
+        const n = noise(x, y, frame);
+        if (d > BURST_RADIUS[frame] || n > BURST_DENSITY[frame]) continue;
+        if (d < BURST_HOLE[frame] && n > 0.15) continue;
+        // Hotter in the middle and early on
+        const heat = 1 - (d / BURST_RADIUS[frame]) * 0.55 - frame * 0.13 + (n - 0.5) * 0.2;
+        const color = Math.min(BURST_COLORS.length - 1, Math.max(0, Math.floor(heat * BURST_COLORS.length)));
+        ctx.fillStyle = BURST_COLORS[color];
+        ctx.fillRect(frame * BURST_SIZE + x, y, 1, 1);
+      }
+    }
+  }
+  return canvas.toDataURL('image/png');
+};
+
+// A short 8-bit death cry made on the spot: a falling square-wave screech over a burst of noise
+let audioContext: AudioContext | null = null;
+const playDeathSound = () => {
+  try {
+    audioContext ??= new AudioContext();
+    const ctx = audioContext;
+    if (ctx.state === 'suspended') void ctx.resume();
+    const t = ctx.currentTime;
+
+    const volume = ctx.createGain();
+    volume.gain.value = 0.1;
+    volume.connect(ctx.destination);
+
+    const screech = ctx.createOscillator();
+    const screechGain = ctx.createGain();
+    screech.type = 'square';
+    screech.frequency.setValueAtTime(1200, t);
+    screech.frequency.exponentialRampToValueAtTime(90, t + 0.22);
+    screechGain.gain.setValueAtTime(0.5, t);
+    screechGain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    screech.connect(screechGain).connect(volume);
+    screech.start(t);
+    screech.stop(t + 0.26);
+
+    const length = Math.floor(ctx.sampleRate * 0.3);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 2;
+    const crackle = ctx.createBufferSource();
+    const crackleGain = ctx.createGain();
+    crackle.buffer = buffer;
+    crackleGain.gain.value = 0.6;
+    crackle.connect(crackleGain).connect(volume);
+    crackle.start(t);
+  } catch {
+    // No Web Audio: the bat dies in silence
+  }
+};
+
 // --- Flight --------------------------------------------------------------------------------
 
 // Seconds between groups, and before the first one after switching to the dark theme
@@ -92,6 +172,7 @@ type Bat = {
   amplitude: number;
   halfBob: number;
   scale: number;
+  dead?: boolean;
 };
 
 const between = ([min, max]: [number, number]) => min + Math.random() * (max - min);
@@ -121,6 +202,7 @@ const makeGroup = (): Bat[] => {
 
 const BatFlock: React.FC = () => {
   const [sheet] = useState(drawSpriteSheet);
+  const [burstSheet] = useState(drawBurstSheet);
   const [bats, setBats] = useState<Bat[]>([]);
 
   useEffect(() => {
@@ -136,9 +218,17 @@ const BatFlock: React.FC = () => {
     return () => window.clearTimeout(timeout);
   }, []);
 
+  const removeBat = (id: number) => setBats(current => current.filter(bat => bat.id !== id));
+
   // A bat leaves the list once it has crossed the screen (the bob and the flap never end)
   const handleAnimationEnd = (id: number) => (event: React.AnimationEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) setBats(current => current.filter(bat => bat.id !== id));
+    if (event.target === event.currentTarget) removeBat(id);
+  };
+
+  // Click or tap: the bat freezes in the air, flashes and bursts; it leaves when the flames die out
+  const killBat = (id: number) => {
+    playDeathSound();
+    setBats(current => current.map(bat => (bat.id === id ? { ...bat, dead: true } : bat)));
   };
 
   return (
@@ -146,7 +236,7 @@ const BatFlock: React.FC = () => {
       {bats.map(bat => (
         <div
           key={bat.id}
-          className={`castle-bat${bat.rtl ? ' castle-bat--rtl' : ''}`}
+          className={`castle-bat${bat.rtl ? ' castle-bat--rtl' : ''}${bat.dead ? ' castle-bat--dead' : ''}`}
           style={
             {
               top: bat.top,
@@ -175,7 +265,23 @@ const BatFlock: React.FC = () => {
                 backgroundSize: `${SPRITE_W * FLAP.length * bat.scale}px ${SPRITE_H * bat.scale}px`,
                 '--bat-sheet-width': `${SPRITE_W * FLAP.length * bat.scale}px`,
               } as React.CSSProperties}
+              onPointerDown={bat.dead ? undefined : () => killBat(bat.id)}
             />
+            {bat.dead && (
+              <div
+                className="castle-bat__burst"
+                style={{
+                  left: ((SPRITE_W - BURST_SIZE) / 2) * bat.scale,
+                  top: ((SPRITE_H - BURST_SIZE) / 2) * bat.scale,
+                  width: BURST_SIZE * bat.scale,
+                  height: BURST_SIZE * bat.scale,
+                  backgroundImage: `url(${burstSheet})`,
+                  backgroundSize: `${BURST_SIZE * BURST_FRAMES * bat.scale}px ${BURST_SIZE * bat.scale}px`,
+                  '--burst-sheet-width': `${BURST_SIZE * BURST_FRAMES * bat.scale}px`,
+                } as React.CSSProperties}
+                onAnimationEnd={() => removeBat(bat.id)}
+              />
+            )}
           </div>
         </div>
       ))}

@@ -36,6 +36,7 @@
 }
 
 .castle-bat__bob {
+  position: relative;
   animation: bat-bob ease-in-out infinite alternate;
 }
 
@@ -54,4 +55,51 @@
 @keyframes bat-flap {
   from { background-position: 0 0; }
   to { background-position: calc(var(--bat-sheet-width) * -1) 0; }
+}
+
+/*
+ * Bats can be shot. Only the sprite takes clicks and taps (the layer around it lets them through),
+ * with an invisible margin so a moving bat is easy to hit with a finger. The selector outranks the
+ * site's cursor rules, so a crosshair shows over a bat.
+ */
+.castle-bats .castle-bat__sprite {
+  position: relative;
+  pointer-events: auto;
+  cursor: crosshair !important;
+  touch-action: manipulation;
+}
+
+.castle-bat__sprite::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+}
+
+/* Shot: the bat freezes where it was, flashes white for an instant and bursts into flames */
+.castle-bat--dead,
+.castle-bat--dead .castle-bat__bob {
+  animation-play-state: paused;
+}
+
+.castle-bat--dead .castle-bat__sprite {
+  animation: bat-hit 0.1s steps(1) forwards;
+}
+
+@keyframes bat-hit {
+  from { filter: brightness(0) invert(1); }
+  to { opacity: 0; }
+}
+
+.castle-bat__burst {
+  position: absolute;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: bat-burst 0.5s steps(6) forwards;
+}
+
+/* Ends past the last frame, on an empty spot of the sheet, so the flames vanish */
+@keyframes bat-burst {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--burst-sheet-width) * -1) 0; }
 }
