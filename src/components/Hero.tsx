@@ -6,6 +6,7 @@ import typingSound from '../assets/Sounds/typewriter-typing.mp3';
 // import { Professional, Personal } from '../utils/Icons';
 // import AnimatedCursor from 'react-animated-cursor';
 import GooeyCursor from './GooeyCursor';
+import GooeyBlob from './GooeyBlob';
 import { useHasFinePointer } from '../hooks/useHasFinePointer';
 
 // Typing animation keyframes
@@ -386,8 +387,8 @@ const Hero: React.FC = () => {
       id="home" 
       className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 pt-16 relative overflow-hidden cursor-none-active"
     >
-      {/* With a mouse the bubbles follow it; on touch screens they wander on their own */}
-      <GooeyCursor mode={hasFinePointer ? 'pointer' : 'auto'} />
+      {/* With a mouse the bubbles follow it; on touch screens a GPU-drawn bubble wanders on its own */}
+      {hasFinePointer ? <GooeyCursor /> : <GooeyBlob />}
       <style>{typingAnimation}</style>
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center relative z-10">
         {/* Font scales with the screen so the one-line typing animation never gets clipped */}
