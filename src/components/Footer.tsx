@@ -4,7 +4,6 @@ import { useTheme } from '../context/ThemeContext';
 const SOCIAL_LINKS = [
   { label: 'LinkedIn', url: 'https://www.linkedin.com/in/ivan-joel-sanchez-santana/' },
   { label: 'GitHub', url: 'https://github.com/IvanSS22030' },
-  { label: 'X', url: 'https://x.com/Ivanjoel2030' },
   { label: 'YouTube', url: 'https://www.youtube.com/@AICoversenEspanol-in8zg' },
 ];
 
