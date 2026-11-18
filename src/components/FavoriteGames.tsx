@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { GameItem } from '../types';
 import { favoriteGames } from '../data/games';
 import { useTheme } from '../context/ThemeContext';
+import { useHasFinePointer } from '../hooks/useHasFinePointer';
 
 const FavoriteGames: React.FC = () => {
   const { theme } = useTheme();
+  const hasFinePointer = useHasFinePointer();
   const [activeGame, setActiveGame] = useState<number | null>(null);
   const iframeRefs = useRef<Record<number, HTMLIFrameElement | null>>({});
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
@@ -156,15 +158,22 @@ const FavoriteGames: React.FC = () => {
                 </div>
               )}
               
-              {/* Game Info Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent flex flex-col justify-end p-6 text-white z-20 pointer-events-none">
+              {/* Game info and preview hint: shown over the cover, faded out while the video plays */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent flex flex-col justify-end p-6 text-white z-20 pointer-events-none transition-opacity duration-500 ${
+                  activeGame === game.id ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
                 <h3 className="text-xl font-bold text-amber-400 font-serif mb-2">{game.title}</h3>
                 <p className="text-amber-200">{game.description}</p>
               </div>
-              
-              {/* Hover indicator */}
-              <div className="absolute top-4 right-4 bg-amber-900 text-amber-200 px-3 py-1 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
-                Hover to Preview
+
+              <div
+                className={`absolute top-4 right-4 bg-amber-900 text-amber-200 px-3 py-1 rounded-full text-xs transition-opacity duration-300 z-30 pointer-events-none ${
+                  activeGame === game.id ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
+                {hasFinePointer ? 'Hover' : 'Tap'} to Preview
               </div>
             </div>
           ))}
