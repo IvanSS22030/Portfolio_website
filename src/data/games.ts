@@ -26,7 +26,7 @@ export const favoriteGames: GameItem[] = [
     id: 4,
     title: "Pokemon Crystal",
     image: "/images/games/Pokemon Crystal.jpg",
-    video: "https://www.youtube.com/embed/QpuUfQhgSyQ",
-    description: "Classic Castlevania gameplay at its finest with multiple paths."
+    video: "/videos/Pokemon_Crystal.mp4",
+    description: "The definitive Johto adventure, the first with animated Pokémon sprites and a playable female trainer."
   }
 ];
